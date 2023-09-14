@@ -1,3 +1,17 @@
+@import "../src/components/button/style.css";
+@import "../src/components/card/style.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html, #root {
+    height: 100vh;
+    font-family: "Fredoka", "Arial", sans-serif;
+}
+
+@layer components{
+    .app-wrapper {
+        @apply flex h-full flex-col bg-gray-600 text-neutral-100
+    }
+}

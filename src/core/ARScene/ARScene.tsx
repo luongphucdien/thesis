@@ -9,6 +9,9 @@ import {
     useHitTest,
 } from "@react-three/xr"
 import { useRef, useState } from "react"
+import { IconContext } from "react-icons"
+import { FaChevronLeft } from "react-icons/fa6"
+import { Card } from "../../components/card"
 
 interface MarkerObj {
     position: THREE.Vector3
@@ -51,34 +54,49 @@ export const ARScene = () => {
     const onSessionEnd = () => {}
 
     return (
-        <>
-            <ARButton />
+        <div className="flex flex-col items-center gap-8">
+            <div className="flex w-full justify-between p-4">
+                <IconContext.Provider value={{ size: "24px" }}>
+                    <FaChevronLeft />
+                </IconContext.Provider>
+                <p>End</p>
+            </div>
 
-            <Canvas>
-                <XR
-                    referenceSpace="local"
-                    onSessionStart={onSessionStart}
-                    onSessionEnd={onSessionEnd}
-                >
-                    <ambientLight />
-                    <pointLight position={[10, 10, 10]} />
-                    <Marker />
-                    <Controllers />
-                </XR>
-            </Canvas>
+            <div className="px-96">
+                <Card>
+                    <div className="bg-slate-300 p-5">
+                        <ARButton />
 
-            <button onClick={() => setShow(markerArray.current.length)}>
-                Show
-            </button>
+                        <Canvas>
+                            <XR
+                                referenceSpace="local"
+                                onSessionStart={onSessionStart}
+                                onSessionEnd={onSessionEnd}
+                            >
+                                <ambientLight />
+                                <pointLight position={[10, 10, 10]} />
+                                <Marker />
+                                <Controllers />
+                            </XR>
+                        </Canvas>
+                    </div>
+                </Card>
+            </div>
 
             <div>
-                {show &&
-                    markerArray.current.map((item, idx) => (
-                        <div key={idx} className="pb-4">
-                            {item.position.toArray()}
-                        </div>
-                    ))}
+                <button onClick={() => setShow(markerArray.current.length)}>
+                    Show
+                </button>
+
+                <div>
+                    {show &&
+                        markerArray.current.map((item, idx) => (
+                            <div key={idx} className="pb-4">
+                                {item.position.toArray()}
+                            </div>
+                        ))}
+                </div>
             </div>
-        </>
+        </div>
     )
 }
