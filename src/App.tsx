@@ -4,9 +4,7 @@ import { CustomRoute } from "./routes"
 function App() {
     return (
         <BrowserRouter>
-            <div className="app-wrapper">
-                <CustomRoute />
-            </div>
+            <CustomRoute />
         </BrowserRouter>
     )
 }

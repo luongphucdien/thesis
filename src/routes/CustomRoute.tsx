@@ -1,7 +1,9 @@
 import { Route, Routes } from "react-router-dom"
 import { ARScene } from "../core/ARScene"
+import { Dashboard } from "../pages/dashboard"
 import { Home } from "../pages/home"
 import { Page } from "./Page"
+import { PageWithBG } from "./PageWithBG"
 
 export const CustomRoute = () => {
     return (
@@ -10,7 +12,20 @@ export const CustomRoute = () => {
                 path="/"
                 element={
                     <Page title="Home">
-                        <Home />
+                        <PageWithBG>
+                            <Home />
+                        </PageWithBG>
+                    </Page>
+                }
+            />
+
+            <Route
+                path="/dashboard"
+                element={
+                    <Page title="Dashboard">
+                        <PageWithBG>
+                            <Dashboard />
+                        </PageWithBG>
                     </Page>
                 }
             />
