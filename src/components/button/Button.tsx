@@ -1,6 +1,11 @@
-export interface ButtonProps extends React.PropsWithChildren {}
+export interface ButtonProps
+    extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
 
 export const Button = (props: ButtonProps) => {
-    const { children } = props
-    return <button className="button">{children}</button>
+    const { children, ...othersProps } = props
+    return (
+        <button className="button" {...othersProps}>
+            {children}
+        </button>
+    )
 }
