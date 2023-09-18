@@ -12,6 +12,7 @@ export const Home = () => {
             <div className="flex flex-col gap-5">
                 <LinkButton to="/ar">Enter AR</LinkButton>
                 <LinkButton to="/dashboard">Dashboard</LinkButton>
+                <LinkButton to="/sign-up">To Sign Up</LinkButton>
             </div>
         </div>
     )
