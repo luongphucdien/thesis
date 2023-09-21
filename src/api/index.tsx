@@ -11,10 +11,27 @@ export const testConnection = async () => {
         .catch((err) => console.log(err))
 }
 
+export const checkIfEmailExisted = async (
+    email: string,
+    isExistedCallback: () => void,
+    isNotExistedCallback: () => void
+) => {
+    return await axios
+        .get(`${API_URL}/api/users/${email}`)
+        .then((res) => {
+            if (res.data.fetchedEmails.length === 0) {
+                isNotExistedCallback()
+            } else isExistedCallback()
+
+            console.log(res.data)
+        })
+        .catch((err) => console.log(err))
+}
+
 export const signUp = async (email: string, password: string) => {
     const _encryptedPW = encrypt(password)
     return await axios
-        .post(`${API_URL}/api/user`, {
+        .post(`${API_URL}/api/users`, {
             email: email,
             password: _encryptedPW,
         })
