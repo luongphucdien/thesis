@@ -1,5 +1,6 @@
 @import "../src/components/button/style.css";
 @import "../src/components/card/style.css";
+@import "../src/components/text-field/style.css";
 
 @tailwind base;
 @tailwind components;
