@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { FiArrowRight, FiCheck } from "react-icons/fi"
+import { useNavigate } from "react-router-dom"
 import { checkIfEmailExisted, signUp } from "../../api"
 import { Button, IconButton } from "../../components/button"
 import { FormControl } from "../../components/form-control"
@@ -19,24 +20,34 @@ export const SignUp = () => {
             : setIsPWMatched(false)
     }, [rePW, password])
 
-    const [tempDisabled, setTempDisabled] = useState(false)
-    const [emailValid, setEmailValid] = useState(false)
+    const [checkEmailDisabler, setCheckEmailDisabler] = useState(false)
+    const [emailExisted, setEmailExisted] = useState(false)
 
     const handleEmailExisted = () => {
-        setTempDisabled(false)
+        setCheckEmailDisabler(false)
+        setEmailExisted(false)
+        alert("This email has been used!")
     }
     const handleEmailNotExisted = () => {
-        setEmailValid(true)
+        setEmailExisted(true)
     }
 
     const checkEmail = (email: string) => {
-        setTempDisabled(true)
+        setCheckEmailDisabler(true)
         checkIfEmailExisted(email, handleEmailExisted, handleEmailNotExisted)
     }
 
+    const [signingUp, setSigningUp] = useState(false)
+
     const handleSignUp = () => {
-        // console.log(`Email: ${email} | Password: ${password}`)
-        signUp(email, password)
+        setSigningUp(true)
+        signUp(email, password, setSigningUp, signUpDone)
+    }
+
+    const nav = useNavigate()
+    const signUpDone = () => {
+        alert("Sign up successfully!")
+        nav(-1)
     }
 
     return (
@@ -56,46 +67,49 @@ export const SignUp = () => {
                         <span className="absolute -right-12 transition-all">
                             <IconButton
                                 onClick={() => checkEmail(email)}
-                                disabled={tempDisabled || emailValid}
+                                disabled={checkEmailDisabler || emailExisted}
                             >
-                                {!emailValid ? <FiArrowRight /> : <FiCheck />}
+                                {!emailExisted ? <FiArrowRight /> : <FiCheck />}
                             </IconButton>
                         </span>
                     </div>
                 </div>
 
-                {emailValid && (
-                    <FormControl>
-                        <FormControl.Label>
-                            Enter your password
-                        </FormControl.Label>
-                        <TextField
-                            onChange={(event) =>
-                                setPassword(event.target.value)
-                            }
-                            type="password"
-                        />
-                    </FormControl>
-                )}
+                {emailExisted && (
+                    <>
+                        <FormControl>
+                            <FormControl.Label>
+                                Enter your password
+                            </FormControl.Label>
+                            <TextField
+                                onChange={(event) =>
+                                    setPassword(event.target.value)
+                                }
+                                type="password"
+                            />
+                        </FormControl>
 
-                {emailValid && (
-                    <FormControl>
-                        <FormControl.Label>
-                            Re-enter your password
-                        </FormControl.Label>
-                        <TextField
-                            onChange={(event) => setRePW(event.target.value)}
-                            type="password"
-                        />
-                    </FormControl>
-                )}
+                        <FormControl>
+                            <FormControl.Label>
+                                Re-enter your password
+                            </FormControl.Label>
+                            <TextField
+                                onChange={(event) =>
+                                    setRePW(event.target.value)
+                                }
+                                type="password"
+                            />
+                        </FormControl>
 
-                {emailValid && (
-                    <div>
-                        <Button disabled={!isPWMatched} onClick={handleSignUp}>
-                            Continue
-                        </Button>
-                    </div>
+                        <div>
+                            <Button
+                                disabled={!isPWMatched || signingUp}
+                                onClick={handleSignUp}
+                            >
+                                Continue
+                            </Button>
+                        </div>
+                    </>
                 )}
             </div>
         </div>
