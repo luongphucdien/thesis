@@ -41,13 +41,23 @@ export const SignUp = () => {
 
     const handleSignUp = () => {
         setSigningUp(true)
-        signUp(email, password, setSigningUp, signUpDone)
+        signUp(
+            email,
+            password,
+            setSigningUp,
+            handleSignUpDone,
+            handleSignUpError
+        )
     }
 
     const nav = useNavigate()
-    const signUpDone = () => {
+    const handleSignUpDone = () => {
         alert("Sign up successfully!")
         nav(-1)
+    }
+
+    const handleSignUpError = () => {
+        alert("Sign Up Error!")
     }
 
     return (

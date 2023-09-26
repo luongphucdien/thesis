@@ -1,6 +1,5 @@
 import axios, { HttpStatusCode } from "axios"
 import { Buffer } from "buffer"
-import { encrypt } from "./security"
 
 const _raw_API_URL: string = import.meta.env.VITE_API_URL
 const API_URL = _raw_API_URL.replace(/["]+/g, "")
@@ -33,24 +32,65 @@ export const signUp = async (
     email: string,
     password: string,
     setSignUpState: (state: boolean) => void,
-    signUpDoneCallback: () => void
+    onSuccessCallback: () => void,
+    onErrorCallback: () => void
 ) => {
-    const _encryptedPW = encrypt(password)
     const _base64Email = Buffer.from(email).toString("base64")
 
-    return await axios
+    await axios
         .post(`${API_URL}/api/users`, {
             email: email,
             base64Email: _base64Email,
-            password: _encryptedPW,
+            password: password,
         })
         .then((res) => {
             if (res.data.code === HttpStatusCode.Ok) {
                 setSignUpState(true)
-                signUpDoneCallback()
-            } else setSignUpState(false)
+                onSuccessCallback()
+            } else {
+                setSignUpState(false)
+                onErrorCallback()
+            }
+            console.log(res.data)
         })
         .catch(() => {
             setSignUpState(false)
+            onErrorCallback()
+        })
+}
+
+export const signIn = async (
+    email: string,
+    password: string,
+    onSuccessCallback: (token: string) => void,
+    onErrorCallback: () => void
+) => {
+    const _base64Email = Buffer.from(email).toString("base64")
+
+    return await axios
+        .post(`${API_URL}/api/user/${_base64Email}`, {
+            email: email,
+            password: password,
+            base64Email: _base64Email,
+        })
+        .then((res) => {
+            if (res.data.code === HttpStatusCode.Ok) {
+                onSuccessCallback(res.data.userToken)
+            } else {
+                onErrorCallback()
+            }
+
+            console.log({
+                data: res.data,
+                sourceData: {
+                    email: email,
+                    pw: password,
+                    base64Email: _base64Email,
+                },
+            })
+        })
+        .catch((err) => {
+            onErrorCallback()
+            console.log(err)
         })
 }
