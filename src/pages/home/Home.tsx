@@ -1,10 +1,19 @@
+import { useEffect } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import { TbAugmentedReality } from "react-icons/tb"
 import { Button, LinkButton } from "../../components/button"
 
 export const Home = () => {
-    const [cookies, _, removeCookie] = useCookies(["userToken"])
+    const [cookies, setCookie, removeCookie] = useCookies(["userToken"])
+
+    useEffect(() => {
+        cookies.userToken &&
+            setCookie("userToken", cookies.userToken, {
+                path: "/",
+                maxAge: 86400,
+            })
+    }, [])
 
     const handleSignOut = () => {
         removeCookie("userToken")

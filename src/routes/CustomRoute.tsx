@@ -28,9 +28,7 @@ export const CustomRoute = () => {
                 element={
                     <PrivatePage>
                         <Page title="Dashboard">
-                            <PageWithBG>
-                                <Dashboard />
-                            </PageWithBG>
+                            <Dashboard />
                         </Page>
                     </PrivatePage>
                 }
