@@ -7,7 +7,7 @@
 }
 
 .button {
-    @apply rounded-full bg-slate-500 px-6 h-10 hover:bg-slate-400 active:bg-slate-600 transition-all disabled-button
+    @apply w-full rounded-full bg-neutral-100/30 px-6 h-10 hover:bg-neutral-100/50 active:bg-neutral-100/20 transition-all disabled-button
 }
 
 .icon-button {

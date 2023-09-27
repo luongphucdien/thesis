@@ -1,0 +1,17 @@
+.sidebar-layout{
+    &-main {
+        @apply h-full flex-auto
+    }
+    
+    &-compact, &-default {
+        @apply h-full
+    }
+
+    &-compact {
+        @apply w-12
+    }
+
+    &-default {
+        @apply w-72
+    }
+}
