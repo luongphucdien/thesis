@@ -53,7 +53,7 @@ export const SignUp = () => {
     const nav = useNavigate()
     const handleSignUpDone = () => {
         alert("Sign up successfully!")
-        nav(-1)
+        nav(0)
     }
 
     const handleSignUpError = () => {

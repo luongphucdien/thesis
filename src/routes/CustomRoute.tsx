@@ -15,11 +15,13 @@ export const CustomRoute = () => {
             <Route
                 path="/"
                 element={
-                    <Page title="Home">
-                        <PageWithBG>
-                            <Home />
-                        </PageWithBG>
-                    </Page>
+                    <PublicPage>
+                        <Page title="Home">
+                            <PageWithBG>
+                                <Home />
+                            </PageWithBG>
+                        </Page>
+                    </PublicPage>
                 }
             />
 
