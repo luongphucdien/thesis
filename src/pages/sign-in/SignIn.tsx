@@ -22,7 +22,7 @@ export const SignIn = () => {
     const signInSuccess = (token: string) => {
         setCookies("userToken", token, { path: "/", maxAge: 86400 })
         alert("Sign in successfully!")
-        nav(-1)
+        nav(0)
     }
 
     const signInError = () => {
@@ -33,7 +33,7 @@ export const SignIn = () => {
     return (
         <div className="flex h-full items-center justify-center px-96 py-20">
             <div className="flex w-full flex-col items-center justify-center gap-6 rounded-xl bg-slate-700 py-14">
-                <FormControl>
+                <FormControl id="email">
                     <FormControl.Label>Email</FormControl.Label>
                     <TextField
                         onChange={(event) => setEmail(event.target.value)}
@@ -48,14 +48,16 @@ export const SignIn = () => {
                     />
                 </FormControl>
 
-                <Button
-                    onClick={handleSignIn}
-                    disabled={
-                        signInDisabler || (email && password ? false : true)
-                    }
-                >
-                    Sign In
-                </Button>
+                <div>
+                    <Button
+                        onClick={handleSignIn}
+                        disabled={
+                            signInDisabler || (email && password ? false : true)
+                        }
+                    >
+                        Sign In
+                    </Button>
+                </div>
             </div>
         </div>
     )

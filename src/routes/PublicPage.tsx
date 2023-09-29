@@ -6,7 +6,7 @@ export const PublicPage = ({ children }: React.PropsWithChildren) => {
     const nav = useNavigate()
     const [cookies] = useCookies(["userToken"])
     useEffect(() => {
-        cookies.userToken && nav("/")
+        cookies.userToken && nav("/dashboard")
     }, [])
     return <>{children}</>
 }

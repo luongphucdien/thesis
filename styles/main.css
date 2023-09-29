@@ -2,6 +2,7 @@
 @import "../src/components/card/style.css";
 @import "../src/components/text-field/style.css";
 @import "../src/components/layout/style.css";
+@import "../src/components/modal/style.css";
 
 @tailwind base;
 @tailwind components;

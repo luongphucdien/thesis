@@ -4,12 +4,13 @@ import { TextField, TextFieldProps } from "../text-field/TextField"
 interface FormControlProps extends React.PropsWithChildren {
     name?: string
     isRequired?: boolean
+    id?: string
 }
 
 export const FormControl = (props: FormControlProps) => {
-    const { name, children, isRequired = false } = props
+    const { name, children, isRequired = false, id } = props
 
-    const id = `fc-${useId()}-input`
+    const _id = id || `fc-${useId()}-input`
 
     const filteredChildren = React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
@@ -17,14 +18,14 @@ export const FormControl = (props: FormControlProps) => {
                 return React.cloneElement(
                     child as React.ReactElement<TextFieldProps>,
                     {
-                        id: id,
+                        id: _id,
                         name: name,
                     }
                 )
             } else if ((child as React.ReactElement<any>).type === Label) {
                 return React.cloneElement(
                     child as React.ReactElement<LabelProps>,
-                    { htmlFor: id, isRequired: isRequired }
+                    { htmlFor: _id, isRequired: isRequired }
                 )
             } else return child
         } else {
