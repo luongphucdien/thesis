@@ -10,6 +10,16 @@
     @apply w-full rounded-full bg-neutral-100/30 px-6 h-10 hover:bg-neutral-100/50 active:bg-neutral-100/20 transition-all disabled-button
 }
 
+.button {
+    &-primary {
+        @apply w-full rounded-full transition-all px-6 h-10 text-neutral-100
+    }
+
+    &-primary {
+        @apply bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700
+    }
+}
+
 .icon-button {
     @apply rounded-full h-10 w-10 inline-flex items-center justify-center hover:bg-slate-500 active:bg-slate-600 transition-all disabled-icon-button
 }

@@ -1,0 +1,7 @@
+.table-old {
+    @apply table-fixed border-collapse overflow-hidden rounded-xl bg-gray-700 [&>*>tr>*]:px-4 [&>*>tr>*]:py-2 [&>tbody>tr:nth-child(even)]:bg-gray-500 [&>thead>tr]:bg-gray-500
+}
+
+.table-new {
+    @apply table-fixed border-collapse overflow-hidden rounded-xl bg-indigo-400 [&>*>tr>*]:px-4 [&>*>tr>*]:py-2 [&>tbody>tr:nth-child(even)]:bg-indigo-500 [&>thead>tr]:bg-indigo-600 text-neutral-100
+}

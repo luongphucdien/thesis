@@ -9,3 +9,13 @@ export const Button = (props: ButtonProps) => {
         </button>
     )
 }
+
+const Primary = (props: ButtonProps) => {
+    const { children } = props
+    return (
+        <button {...props} className="button-primary">
+            {children}
+        </button>
+    )
+}
+Button.Primary = Primary
