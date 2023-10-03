@@ -1,13 +1,9 @@
 import React, { useEffect, useRef, useState } from "react"
 
-type CoordinateTable<T extends boolean> = React.PropsWithChildren<
-    T extends true ? { editableTitle?: string } : Record<string, never>
->
+type CoordinateTableProps = React.PropsWithChildren
 
-export const CoordinateTable = <T extends boolean = false>(
-    props: { isEditable?: T } & CoordinateTable<T>
-) => {
-    const { children, isEditable, editableTitle } = props
+export const CoordinateTable = (props: CoordinateTableProps) => {
+    const { children } = props
     return (
         <table className="table-new">
             <thead>
@@ -20,20 +16,6 @@ export const CoordinateTable = <T extends boolean = false>(
             </thead>
 
             <tbody>
-                {isEditable && (
-                    <tr>
-                        <td>{editableTitle}</td>
-                        <td>
-                            <EditableInput />
-                        </td>
-                        <td>
-                            <EditableInput />
-                        </td>
-                        <td>
-                            <EditableInput />
-                        </td>
-                    </tr>
-                )}
                 {React.Children.map(children, (child) => (
                     <>{child}</>
                 ))}
@@ -58,8 +40,43 @@ const Column = ({ children }: React.PropsWithChildren) => {
 }
 CoordinateTable.Column = Column
 
-const EditableInput = () => {
+interface EditableSectionProps {
+    editableTitle: string
+    getEditableX: (value: string) => void
+    getEditableY: (value: string) => void
+    getEditableZ: (value: string) => void
+}
+
+const EditableSection = (props: EditableSectionProps) => {
+    const { editableTitle, getEditableX, getEditableY, getEditableZ } = props
+    return (
+        <tr>
+            <td>{editableTitle}</td>
+            <td>
+                <EditableInput getValueCallback={getEditableX} />
+            </td>
+            <td>
+                <EditableInput getValueCallback={getEditableY} />
+            </td>
+            <td>
+                <EditableInput getValueCallback={getEditableZ} />
+            </td>
+        </tr>
+    )
+}
+CoordinateTable.Editable = EditableSection
+
+const EditableInput = (props: {
+    getValueCallback: (value: string) => void
+}) => {
+    const { getValueCallback } = props
+
     const [value, setValue] = useState("")
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setValue(e.target.value)
+        getValueCallback(e.target.value)
+    }
 
     useEffect(() => {
         setWidth(spanRef.current ? spanRef.current.offsetWidth : 0)
@@ -76,8 +93,9 @@ const EditableInput = () => {
 
             <input
                 className="min-w-[40px] max-w-xs text-neutral-800"
-                onChange={(e) => setValue(e.target.value)}
+                onChange={handleInputChange}
                 style={{ width }}
+                {...props}
             />
         </div>
     )

@@ -1,21 +1,21 @@
 export interface ButtonProps
-    extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+    extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+    variant?: "primary" | "error" | "non opaque"
+}
 
 export const Button = (props: ButtonProps) => {
-    const { children, ...othersProps } = props
+    const { children, variant = "primary", ...othersProps } = props
+    const _style =
+        variant === "primary"
+            ? "button-primary"
+            : variant === "error"
+            ? "button-error"
+            : variant === "non opaque"
+            ? "button-non--opaque"
+            : ""
     return (
-        <button className="button" {...othersProps}>
+        <button className={_style} {...othersProps}>
             {children}
         </button>
     )
 }
-
-const Primary = (props: ButtonProps) => {
-    const { children } = props
-    return (
-        <button {...props} className="button-primary">
-            {children}
-        </button>
-    )
-}
-Button.Primary = Primary

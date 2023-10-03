@@ -7,16 +7,20 @@
 }
 
 .button {
-    @apply w-full rounded-full bg-neutral-100/30 px-6 h-10 hover:bg-neutral-100/50 active:bg-neutral-100/20 transition-all disabled-button
-}
-
-.button {
-    &-primary {
+    &-primary, &-error, &-non--opaque {
         @apply w-full rounded-full transition-all px-6 h-10 text-neutral-100
     }
 
     &-primary {
         @apply bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700
+    }
+
+    &-error {
+        @apply bg-red-600 hover:bg-red-500 active:bg-red-700
+    }
+
+    &-non--opaque {
+        @apply bg-neutral-100/30 px-6 h-10 hover:bg-neutral-100/50 active:bg-neutral-100/20
     }
 }
 
