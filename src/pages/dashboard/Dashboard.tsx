@@ -29,6 +29,20 @@ export const Dashboard = () => {
         setIsManualMode(false)
     }
 
+    const [manualMarkers, setManualMarkers] = useState<
+        { x: number; y: number; z: number }[]
+    >([])
+
+    const handleAddManualMarker = (x: number, y: number, z: number) => {
+        setManualMarkers((manualMarkers) => [
+            ...manualMarkers,
+            { x: x, y: y, z: z },
+        ])
+    }
+    const handleRemoveManualMarker = () => {
+        setManualMarkers(manualMarkers.slice(0, -1))
+    }
+
     return (
         <SidebarLayout>
             <div className="flex h-full flex-col gap-5 bg-indigo-600 px-6 pb-10 pt-4 text-neutral-100">
@@ -42,10 +56,12 @@ export const Dashboard = () => {
 
                 <div className="flex h-full flex-col">
                     <div className="flex-1">
-                        <Button>Profile</Button>
+                        <Button variant="non opaque">Profile</Button>
                     </div>
                     <div>
-                        <Button onClick={handleSignOut}>Sign Out</Button>
+                        <Button onClick={handleSignOut} variant="non opaque">
+                            Sign Out
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -58,7 +74,11 @@ export const Dashboard = () => {
                     {!isManualMode ? (
                         <DefaultModal setManualMode={setIsManualMode} />
                     ) : (
-                        <ManualMode />
+                        <ManualMode
+                            addMarkerCallback={handleAddManualMarker}
+                            removeMarkerCallback={handleRemoveManualMarker}
+                            markerList={manualMarkers}
+                        />
                     )}
                 </Modal>
 
@@ -82,6 +102,7 @@ export const Dashboard = () => {
 interface DefaultModalProps {
     setManualMode: (state: boolean) => void
 }
+
 const DefaultModal = ({ setManualMode }: DefaultModalProps) => {
     return (
         <>
@@ -114,19 +135,68 @@ const DefaultModal = ({ setManualMode }: DefaultModalProps) => {
     )
 }
 
-const ManualMode = () => {
+const ManualMode = (props: {
+    addMarkerCallback: (x: number, y: number, z: number) => void
+    removeMarkerCallback: () => void
+    markerList: { x: number; y: number; z: number }[]
+}) => {
+    const { addMarkerCallback, removeMarkerCallback, markerList } = props
+
+    const [valueX, setValueX] = useState("0")
+    const [valueY, setValueY] = useState("0")
+    const [valueZ, setValueZ] = useState("0")
     return (
         <div className="flex flex-col gap-5">
             <div>
-                <CoordinateTable isEditable editableTitle="New Marker:" />
+                <CoordinateTable>
+                    {markerList.map((item, idx) => (
+                        <CoordinateTable.Row key={`row-${idx}`}>
+                            <CoordinateTable.Column>
+                                Marker {idx + 1}
+                            </CoordinateTable.Column>
+
+                            <CoordinateTable.Column>
+                                {item.x}
+                            </CoordinateTable.Column>
+
+                            <CoordinateTable.Column>
+                                {item.y}
+                            </CoordinateTable.Column>
+
+                            <CoordinateTable.Column>
+                                {item.z}
+                            </CoordinateTable.Column>
+                        </CoordinateTable.Row>
+                    ))}
+                    <CoordinateTable.Editable
+                        editableTitle="New Marker:"
+                        getEditableX={setValueX}
+                        getEditableY={setValueY}
+                        getEditableZ={setValueZ}
+                    />
+                </CoordinateTable>
             </div>
+
             <div className="flex gap-4">
                 <span className="flex-1">
-                    <Button.Primary>Add Marker</Button.Primary>
+                    <Button variant="error" onClick={removeMarkerCallback}>
+                        Remove Marker
+                    </Button>
                 </span>
 
                 <span className="flex-1">
-                    <Button.Primary>Remove Marker</Button.Primary>
+                    <Button
+                        variant="primary"
+                        onClick={() =>
+                            addMarkerCallback(
+                                parseFloat(valueX),
+                                parseFloat(valueY),
+                                parseFloat(valueZ)
+                            )
+                        }
+                    >
+                        Add Marker
+                    </Button>
                 </span>
             </div>
         </div>
