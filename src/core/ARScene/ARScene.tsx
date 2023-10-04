@@ -66,9 +66,9 @@ export const ARScene = () => {
 
     return (
         <div
-            className={`flex h-full flex-col items-center gap-8 ${
-                !isARMode ? "bg-gray-600 text-neutral-100" : ""
-            }`}
+            className={
+                "flex h-full flex-col items-center gap-8 text-neutral-800"
+            }
         >
             {!isARMode && (
                 <div className="flex w-full justify-between p-4">
