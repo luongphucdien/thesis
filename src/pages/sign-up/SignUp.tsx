@@ -61,7 +61,7 @@ export const SignUp = () => {
     }
 
     return (
-        <div className="flex h-full items-center justify-center px-96 py-20">
+        <div className="flex h-full items-center justify-center px-2 py-20 sm:px-96">
             <div className="flex w-full flex-col items-center justify-center gap-6 rounded-xl bg-slate-700 py-14">
                 <div className="flex flex-col gap-2">
                     <FormControl.Label htmlFor="email">
