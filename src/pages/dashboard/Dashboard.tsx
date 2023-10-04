@@ -9,6 +9,7 @@ import { Button } from "../../components/button"
 import { CoordinateTable } from "../../components/coordinate-table"
 import { Modal } from "../../components/modal"
 import { Slot } from "../../components/slot"
+import { ManualMode } from "../../core/manual-mode"
 import { useDisclosure } from "../../util/useDisclosure"
 
 export const Dashboard = () => {
@@ -109,11 +110,7 @@ export const Dashboard = () => {
                     {!isManualMode ? (
                         <DefaultModal setManualMode={setIsManualMode} />
                     ) : (
-                        <ManualMode
-                            addMarkerCallback={handleAddManualMarker}
-                            removeMarkerCallback={handleRemoveManualMarker}
-                            markerList={manualMarkers}
-                        />
+                        <ManualMode />
                     )}
                 </Modal>
 
@@ -170,7 +167,7 @@ const DefaultModal = ({ setManualMode }: DefaultModalProps) => {
     )
 }
 
-const ManualMode = (props: {
+const ManualModeOld = (props: {
     addMarkerCallback: (x: number, y: number, z: number) => void
     removeMarkerCallback: () => void
     markerList: { x: number; y: number; z: number }[]
