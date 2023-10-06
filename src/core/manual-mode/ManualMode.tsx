@@ -26,7 +26,7 @@ export const ManualMode = () => {
     const highlighter = useRef<Mesh>(null!)
     const marker = useRef<Mesh>(null!)
 
-    const [objectFound, setObjectFound] = useState(false)
+    const [objectFound, setObjectFound] = useState<boolean>(false)
     const [objectSelector, setObjectSelector] = useState(ObjectType.Default)
 
     const CustomGrid = () => {
@@ -35,7 +35,9 @@ export const ManualMode = () => {
         const mousePos = new Vector2()
         const raycaster = new Raycaster()
 
-        const [_thisMarker, setThisMarker] = useState<Mesh>()
+        const [thisObj, setThisObj] = useState<{ objName: string }>({
+            objName: "",
+        })
 
         const handleOnMouseMove = (event: ThreeEvent<PointerEvent>) => {
             mousePos.x = containerRef.current
@@ -60,9 +62,10 @@ export const ManualMode = () => {
                 }
             })
 
+            const objName = intersects[1].object.name
             const markerRegEx = new RegExp("^marker-[0-9]$")
 
-            setObjectFound(markerRegEx.test(intersects[1].object.name))
+            setObjectFound(markerRegEx.test(objName))
         }
 
         const markers: Mesh<
@@ -76,6 +79,7 @@ export const ManualMode = () => {
             markerClone.position.copy(highlighter.current.position)
             markerClone.position.setY(0.01)
             markerClone.visible = true
+
             markerClone.name = `marker-${markers.length}`
 
             markers.push(markerClone)
@@ -143,15 +147,17 @@ export const ManualMode = () => {
                 </span>
 
                 <div className="flex h-full flex-1 flex-col bg-indigo-600 p-4">
-                    {objectSelector}
+                    <p>{`${
+                        objectSelector === ObjectType.Default
+                            ? "Free Cam"
+                            : objectSelector === ObjectType.Marker
+                            ? "Marker"
+                            : ""
+                    } Mode`}</p>
                     <Modes />
                 </div>
             </div>
         )
-    }
-
-    const handleMouseOverObject = (e: ThreeEvent<PointerEvent>) => {
-        console.log(e.eventObject)
     }
 
     return (
@@ -185,7 +191,6 @@ export const ManualMode = () => {
                         position={[1000, 1000, 1000]}
                         visible={false}
                         ref={marker}
-                        onPointerMove={handleMouseOverObject}
                     >
                         <planeGeometry />
                         <meshBasicMaterial color={"blue"} />
