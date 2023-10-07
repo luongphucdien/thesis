@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom"
 import { ARScene } from "../core/ARScene"
+import { Editor } from "../core/editor"
 import { Dashboard } from "../pages/dashboard"
 import { Home } from "../pages/home"
 import { SignIn } from "../pages/sign-in"
@@ -31,6 +32,17 @@ export const CustomRoute = () => {
                     <PrivatePage>
                         <Page title="Dashboard">
                             <Dashboard />
+                        </Page>
+                    </PrivatePage>
+                }
+            />
+
+            <Route
+                path="/project/new"
+                element={
+                    <PrivatePage>
+                        <Page title="New Floor Plan">
+                            <Editor />
                         </Page>
                     </PrivatePage>
                 }
