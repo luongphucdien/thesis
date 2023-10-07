@@ -9,7 +9,6 @@ import { Button } from "../../components/button"
 import { CoordinateTable } from "../../components/coordinate-table"
 import { Modal } from "../../components/modal"
 import { Slot } from "../../components/slot"
-import { ManualMode } from "../../core/manual-mode"
 import { useDisclosure } from "../../util/useDisclosure"
 
 export const Dashboard = () => {
@@ -43,20 +42,6 @@ export const Dashboard = () => {
     const handleModalOnClose = () => {
         modalDisclosure.onClose()
         setIsManualMode(false)
-    }
-
-    const [manualMarkers, setManualMarkers] = useState<
-        { x: number; y: number; z: number }[]
-    >([])
-
-    const handleAddManualMarker = (x: number, y: number, z: number) => {
-        setManualMarkers((manualMarkers) => [
-            ...manualMarkers,
-            { x: x, y: y, z: z },
-        ])
-    }
-    const handleRemoveManualMarker = () => {
-        setManualMarkers(manualMarkers.slice(0, -1))
     }
 
     return (
@@ -110,21 +95,26 @@ export const Dashboard = () => {
                     {!isManualMode ? (
                         <DefaultModal setManualMode={setIsManualMode} />
                     ) : (
-                        <ManualMode />
+                        // <ManualMode />
+                        <></>
                     )}
                 </Modal>
 
                 <div className="grid grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-4 sm:gap-x-20">
-                    <Slot onClick={modalDisclosure.onOpen}>
-                        <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-2xl border-8 border-dashed text-gray-400">
-                            <span>
-                                <IconContext.Provider value={{ size: "32px" }}>
-                                    <FaPlus />
-                                </IconContext.Provider>
-                            </span>
-                            Add Floor Plan
-                        </div>
-                    </Slot>
+                    <Link to="/project/new">
+                        <Slot>
+                            <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-2xl border-8 border-dashed text-gray-400">
+                                <span>
+                                    <IconContext.Provider
+                                        value={{ size: "32px" }}
+                                    >
+                                        <FaPlus />
+                                    </IconContext.Provider>
+                                </span>
+                                Add Floor Plan
+                            </div>
+                        </Slot>
+                    </Link>
                 </div>
             </div>
         </div>
