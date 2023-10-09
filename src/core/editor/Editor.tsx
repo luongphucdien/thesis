@@ -13,13 +13,14 @@ import {
 import { useNavigate } from "react-router-dom"
 import { Mesh, Raycaster, Vector2, Vector3 } from "three"
 import { useDisclosure } from "../../util/useDisclosure"
+import { Marker } from "./Marker"
 
-enum ObjectType {
-    Default = 0,
-    Marker = 1,
+enum ModeType {
+    Move = "Move",
+    Marker = "Add Marker",
+    Delete = "Delete",
+    Default = ModeType.Move,
 }
-
-const Modes = ["Move", "Add Marker"]
 
 export const Editor = () => {
     const containerRef = useRef<HTMLDivElement>(null)
@@ -27,13 +28,11 @@ export const Editor = () => {
     const marker = useRef<Mesh>(null!)
 
     const [objectFound, setObjectFound] = useState<boolean>(false)
-    const [objectSelector, setObjectSelector] = useState(ObjectType.Default)
+    const [mode, setMode] = useState(ModeType.Default)
 
-    const [markers, setMarkers] = useState<Mesh[]>([])
+    const [markers, setMarkers] = useState<React.ReactElement[]>([])
 
-    const [thisObj, setThisObj] = useState<{ objName: string }>({
-        objName: "",
-    })
+    const [thisObj, setThisObj] = useState<string>("")
 
     const CustomGrid = () => {
         const { camera, scene } = useThree()
@@ -65,21 +64,33 @@ export const Editor = () => {
             })
 
             const objName = intersects[1].object.name
-            const markerRegEx = new RegExp("^marker-[0-9]$")
+            const markerRegEx = new RegExp("^marker-[0-9]+$")
 
             setObjectFound(markerRegEx.test(objName))
         }
 
+        const handleObjectDelete = (objectName: string) => {
+            setMarkers(markers.filter((m) => m.key !== objectName))
+            console.log(markers)
+        }
+
         const handleOnMouseClick = () => {
-            const markerClone = marker.current.clone()
-            markerClone.position.copy(highlighter.current.position)
-            markerClone.position.setY(0.01)
-            markerClone.visible = true
-
-            markerClone.name = `marker-${markers.length}`
-
-            setMarkers((markers) => [...markers, markerClone])
-            scene.add(markerClone)
+            setMarkers((markers) => [
+                ...markers,
+                <Marker
+                    key={`marker-${markers.length}`}
+                    position={
+                        new Vector3(
+                            highlighter.current.position.x,
+                            0.01,
+                            highlighter.current.position.z
+                        )
+                    }
+                    name={`marker-${markers.length}`}
+                    onDelete={handleObjectDelete}
+                />,
+            ])
+            console.log(markers)
         }
 
         return (
@@ -87,7 +98,7 @@ export const Editor = () => {
                 rotation={[Math.PI * -0.5, 0, 0]}
                 onPointerMove={handleOnMouseMove}
                 onPointerDown={
-                    objectSelector !== ObjectType.Default
+                    mode !== ModeType.Default && mode !== ModeType.Delete
                         ? handleOnMouseClick
                         : () => null
                 }
@@ -107,16 +118,9 @@ export const Editor = () => {
                 : sidePanelDisclosure.onOpen()
         }
 
-        const handleDeleteObject = (object: Mesh) => {
-            const markerRegEx = new RegExp("^marker-[0-9]$")
-            if (markerRegEx.test(object.name)) {
-                setMarkers(markers.filter((obj) => obj.name !== object.name))
-            }
-        }
-
         return (
             <div
-                className={`pointer-events-auto absolute right-0 top-0 z-[999] flex h-full w-80 items-center text-neutral-100 ${
+                className={`pointer-events-auto absolute top-0 z-[999] flex h-full w-80 items-center text-neutral-100 ${
                     sidePanelDisclosure.isOpen ? "right-0" : "-right-72"
                 }`}
             >
@@ -134,16 +138,10 @@ export const Editor = () => {
                 </span>
 
                 <div className="flex h-full flex-1 flex-col items-center gap-5 bg-indigo-500 p-4">
-                    <p>{`${
-                        objectSelector === ObjectType.Default
-                            ? "Free Cam"
-                            : objectSelector === ObjectType.Marker
-                            ? "Marker"
-                            : ""
-                    } Mode`}</p>
+                    <p>{`${mode} Mode`}</p>
 
                     <div className="flex w-full flex-col gap-2">
-                        {markers.map((item) => (
+                        {/* {markers.map((item) => (
                             <div
                                 key={item.name}
                                 className="flex justify-between rounded-md border border-neutral-100 p-2"
@@ -164,7 +162,7 @@ export const Editor = () => {
                                     </div>
                                 </IconContext.Provider>
                             </div>
-                        ))}
+                        ))} */}
                     </div>
                 </div>
             </div>
@@ -174,15 +172,15 @@ export const Editor = () => {
     const ToolBar = () => {
         const ModeButton = ({
             children,
-            mode,
-        }: React.PropsWithChildren<{ mode: ObjectType }>) => {
+            modeType,
+        }: React.PropsWithChildren<{ modeType: ModeType }>) => {
             return (
                 <span
                     className={`cursor-pointer rounded-md p-1 ${
-                        objectSelector === mode ? "bg-indigo-800" : ""
+                        modeType === mode ? "bg-indigo-800" : ""
                     }`}
-                    onClick={() => setObjectSelector(mode)}
-                    title={Modes[mode]}
+                    onClick={() => setMode(modeType)}
+                    title={modeType}
                 >
                     {children}
                 </span>
@@ -190,12 +188,16 @@ export const Editor = () => {
         }
 
         const modes = [
-            <ModeButton key={"mode-move"} mode={ObjectType.Default}>
+            <ModeButton key={"mode-move"} modeType={ModeType.Default}>
                 <IoIosMove />
             </ModeButton>,
 
-            <ModeButton key={"mode-marker"} mode={ObjectType.Marker}>
+            <ModeButton key={"mode-marker"} modeType={ModeType.Marker}>
                 <IoMdPin />
+            </ModeButton>,
+
+            <ModeButton key={"mode-delete"} modeType={ModeType.Delete}>
+                <IoMdClose />
             </ModeButton>,
         ]
 
@@ -256,15 +258,9 @@ export const Editor = () => {
                 </mesh>
 
                 <group>
-                    <mesh
-                        rotation={[Math.PI * -0.5, 0, 0]}
-                        position={[1000, 1000, 1000]}
-                        visible={false}
-                        ref={marker}
-                    >
-                        <planeGeometry />
-                        <meshBasicMaterial color={"blue"} />
-                    </mesh>
+                    {markers.map((marker) => (
+                        <>{marker}</>
+                    ))}
                 </group>
 
                 <MapControls />
