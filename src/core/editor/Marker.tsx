@@ -10,10 +10,9 @@ import { useToggle } from "../../util/useToggle"
 interface MarkerRef {
     position: Vector3
     name: string
-    onDelete: (name: string) => void
 }
 export const Marker = (props: MarkerRef) => {
-    const { position, name, onDelete } = props
+    const { position, name } = props
 
     const markerRef = useRef<Mesh>(null!)
 
@@ -56,12 +55,7 @@ export const Marker = (props: MarkerRef) => {
 
                             <div className="flex flex-col items-center gap-3">
                                 <p>{name}</p>
-                                <Button
-                                    variant="error"
-                                    onClick={() => onDelete(name)}
-                                >
-                                    Delete
-                                </Button>
+                                <Button variant="error">Delete</Button>
                             </div>
                         </div>
                     </div>
