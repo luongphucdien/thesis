@@ -25,14 +25,13 @@ enum ModeType {
 export const Editor = () => {
     const containerRef = useRef<HTMLDivElement>(null)
     const highlighter = useRef<Mesh>(null!)
-    const marker = useRef<Mesh>(null!)
 
     const [objectFound, setObjectFound] = useState<boolean>(false)
     const [mode, setMode] = useState(ModeType.Default)
 
     const [markers, setMarkers] = useState<React.ReactElement[]>([])
 
-    const [thisObj, setThisObj] = useState<string>("")
+    const [dirty, setDirty] = useState(false)
 
     const CustomGrid = () => {
         const { camera, scene } = useThree()
@@ -69,11 +68,6 @@ export const Editor = () => {
             setObjectFound(markerRegEx.test(objName))
         }
 
-        const handleObjectDelete = (objectName: string) => {
-            setMarkers(markers.filter((m) => m.key !== objectName))
-            console.log(markers)
-        }
-
         const handleOnMouseClick = () => {
             setMarkers((markers) => [
                 ...markers,
@@ -87,10 +81,8 @@ export const Editor = () => {
                         )
                     }
                     name={`marker-${markers.length}`}
-                    onDelete={handleObjectDelete}
                 />,
             ])
-            console.log(markers)
         }
 
         return (
@@ -118,6 +110,17 @@ export const Editor = () => {
                 : sidePanelDisclosure.onOpen()
         }
 
+        const handleObjectDelete = (objectName: string) => {
+            markers.forEach((item, idx) => {
+                if (item.key === objectName) {
+                    markers.splice(idx, 1)
+                }
+            })
+            console.log(markers)
+            setMarkers(markers)
+            setDirty(!dirty)
+        }
+
         return (
             <div
                 className={`pointer-events-auto absolute top-0 z-[999] flex h-full w-80 items-center text-neutral-100 ${
@@ -141,12 +144,12 @@ export const Editor = () => {
                     <p>{`${mode} Mode`}</p>
 
                     <div className="flex w-full flex-col gap-2">
-                        {/* {markers.map((item) => (
+                        {markers.map((item) => (
                             <div
-                                key={item.name}
+                                key={item.key}
                                 className="flex justify-between rounded-md border border-neutral-100 p-2"
                             >
-                                <p>{item.name}</p>
+                                <p>{item.key}</p>
 
                                 <IconContext.Provider value={{ size: "24px" }}>
                                     <div>
@@ -154,7 +157,9 @@ export const Editor = () => {
                                             className="cursor-pointer"
                                             title="Delete this object"
                                             onClick={() =>
-                                                handleDeleteObject(item)
+                                                handleObjectDelete(
+                                                    item.key!.toString()
+                                                )
                                             }
                                         >
                                             <IoMdClose />
@@ -162,7 +167,7 @@ export const Editor = () => {
                                     </div>
                                 </IconContext.Provider>
                             </div>
-                        ))} */}
+                        ))}
                     </div>
                 </div>
             </div>
@@ -255,6 +260,10 @@ export const Editor = () => {
                         color={"green"}
                         visible={objectFound ? false : true}
                     />
+                </mesh>
+
+                <mesh visible={dirty} position={[1000, 1000, 1000]}>
+                    <boxGeometry />
                 </mesh>
 
                 <group>
