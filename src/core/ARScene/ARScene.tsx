@@ -9,17 +9,23 @@ import {
     useHitTest,
 } from "@react-three/xr"
 import { useRef, useState } from "react"
+import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import { FaChevronLeft } from "react-icons/fa6"
 import { useNavigate } from "react-router-dom"
+import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { CoordinateTable } from "../../components/coordinate-table"
+import { TextField } from "../../components/text-field"
 
 interface MarkerObj {
     position: THREE.Vector3
 }
 
 export const ARScene = () => {
+    const [cookies] = useCookies(["userUID"])
+    const [projName, setProjName] = useState("")
+
     const [isARMode, setIsARMode] = useState(false)
 
     const markerRef = useRef<THREE.Mesh>(null!)
@@ -63,6 +69,9 @@ export const ARScene = () => {
     }
 
     const navigate = useNavigate()
+
+    const handleSaveSuccess = () => {}
+    const handleSaveFail = () => {}
 
     return (
         <div
@@ -132,9 +141,39 @@ export const ARScene = () => {
                                             can try again!
                                         </p>
 
+                                        <span className="[&>*]:text-neutral-800">
+                                            <TextField
+                                                onChange={(event) =>
+                                                    setProjName(
+                                                        event.target.value
+                                                    )
+                                                }
+                                                placeholder="Project Name"
+                                            />
+                                        </span>
+
                                         <div className="flex gap-4">
-                                            <Button>No</Button>
-                                            <Button>Yes!</Button>
+                                            <Button onClick={() => navigate(0)}>
+                                                No
+                                            </Button>
+
+                                            <Button
+                                                onClick={() =>
+                                                    saveProject(
+                                                        cookies.userUID,
+                                                        {
+                                                            markers:
+                                                                markerArray,
+                                                        },
+                                                        projName,
+                                                        handleSaveSuccess,
+                                                        handleSaveFail
+                                                    )
+                                                }
+                                                disabled={projName === ""}
+                                            >
+                                                Yes!
+                                            </Button>
                                         </div>
                                     </div>
                                 </>
@@ -155,6 +194,12 @@ export const ARScene = () => {
                             </p>
                         </>
                     )}
+
+                    <p className="text-center italic sm:hidden">
+                        Editor is currently unavailable for mobile, please
+                        access it from your PC or from a device with larger
+                        screen.
+                    </p>
                 </div>
             )}
 
