@@ -1,6 +1,6 @@
 import { MapControls } from "@react-three/drei"
 import { Canvas, ThreeEvent, useThree } from "@react-three/fiber"
-import { useRef, useState } from "react"
+import React, { useRef, useState } from "react"
 import { IconContext } from "react-icons"
 import {
     IoIosArrowBack,
@@ -10,7 +10,8 @@ import {
     IoMdClose,
     IoMdPin,
 } from "react-icons/io"
-import { useNavigate } from "react-router-dom"
+import { TbAugmentedReality } from "react-icons/tb"
+import { Link, useNavigate } from "react-router-dom"
 import { Mesh, Raycaster, Vector2, Vector3 } from "three"
 import { useDisclosure } from "../../util/useDisclosure"
 import { Marker } from "./Marker"
@@ -19,6 +20,7 @@ enum ModeType {
     Move = "Move",
     Marker = "Add Marker",
     Delete = "Delete",
+    AR = "AR",
     Default = ModeType.Move,
 }
 
@@ -121,6 +123,14 @@ export const Editor = () => {
             setDirty(!dirty)
         }
 
+        const [selectedObj, setSelectedObj] = useState("")
+
+        const handleOnSelect = (thisObj: string) => {
+            thisObj === selectedObj
+                ? setSelectedObj("")
+                : setSelectedObj(thisObj)
+        }
+
         return (
             <div
                 className={`pointer-events-auto absolute top-0 z-[999] flex h-full w-80 items-center text-neutral-100 ${
@@ -147,12 +157,21 @@ export const Editor = () => {
                         {markers.map((item) => (
                             <div
                                 key={item.key}
-                                className="flex justify-between rounded-md border border-neutral-100 p-2"
+                                className={`flex select-none justify-between rounded-md border border-neutral-100 p-2 ${
+                                    selectedObj === item.key?.toString()
+                                        ? "bg-indigo-400"
+                                        : ""
+                                }`}
+                                onClick={() =>
+                                    handleOnSelect(item.key!.toString())
+                                }
                             >
                                 <p>{item.key}</p>
 
                                 <IconContext.Provider value={{ size: "24px" }}>
-                                    <div>
+                                    <div
+                                        onMouseOver={(e) => e.stopPropagation()}
+                                    >
                                         <span
                                             className="cursor-pointer"
                                             title="Delete this object"
@@ -201,8 +220,10 @@ export const Editor = () => {
                 <IoMdPin />
             </ModeButton>,
 
-            <ModeButton key={"mode-delete"} modeType={ModeType.Delete}>
-                <IoMdClose />
+            <ModeButton key={"mode-ar"} modeType={ModeType.AR}>
+                <Link to={"/ar"}>
+                    <TbAugmentedReality />
+                </Link>
             </ModeButton>,
         ]
 

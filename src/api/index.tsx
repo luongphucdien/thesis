@@ -62,12 +62,12 @@ export const signUp = async (
 export const signIn = async (
     email: string,
     password: string,
-    onSuccessCallback: (token: string) => void,
+    onSuccessCallback: (token: string, userUID: string) => void,
     onErrorCallback: () => void
 ) => {
     const _base64Email = Buffer.from(email).toString("base64")
 
-    return await axios
+    await axios
         .post(`${API_URL}/api/user/${_base64Email}`, {
             email: email,
             password: password,
@@ -75,7 +75,7 @@ export const signIn = async (
         })
         .then((res) => {
             if (res.data.code === HttpStatusCode.Ok) {
-                onSuccessCallback(res.data.userToken)
+                onSuccessCallback(res.data.userToken, _base64Email)
             } else {
                 onErrorCallback()
             }
@@ -92,5 +92,30 @@ export const signIn = async (
         .catch((err) => {
             onErrorCallback()
             console.log(err)
+        })
+}
+
+export const saveProject = async (
+    base64Email: string,
+    project: object,
+    projectName: string,
+    onSuccessCallback: () => void,
+    onFailureCallback: () => void
+) => {
+    await axios
+        .post(
+            `${API_URL}/api/user/${base64Email}/project/${projectName}`,
+            project
+        )
+        .then((res) => {
+            if (res.data.code === HttpStatusCode.Ok) {
+                onSuccessCallback()
+            } else {
+                onFailureCallback()
+            }
+        })
+        .catch((error) => {
+            onFailureCallback()
+            console.log(error)
         })
 }

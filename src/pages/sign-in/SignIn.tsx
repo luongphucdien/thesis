@@ -16,11 +16,15 @@ export const SignIn = () => {
         signIn(email, password, signInSuccess, signInError)
     }
 
-    const [cookies, setCookies] = useCookies(["userToken"])
+    const [cookies, setCookies] = useCookies(["userToken", "userUID"])
 
     const nav = useNavigate()
-    const signInSuccess = (token: string) => {
+    const signInSuccess = (token: string, userUID: string) => {
         setCookies("userToken", token, { path: "/", maxAge: 86400 })
+        setCookies("userUID", userUID, {
+            path: "/",
+            maxAge: 86400,
+        })
         alert("Sign in successfully!")
         nav(0)
     }
