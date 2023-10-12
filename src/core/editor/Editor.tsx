@@ -7,12 +7,14 @@ import {
     IoIosArrowForward,
     IoIosMove,
     IoMdArrowBack,
+    IoMdCheckmark,
     IoMdClose,
     IoMdPin,
 } from "react-icons/io"
 import { TbAugmentedReality } from "react-icons/tb"
 import { Link, useNavigate } from "react-router-dom"
 import { Mesh, Raycaster, Vector2, Vector3 } from "three"
+import { generateUUID } from "three/src/math/MathUtils.js"
 import { useDisclosure } from "../../util/useDisclosure"
 import { Marker } from "./Marker"
 
@@ -24,6 +26,16 @@ enum ModeType {
     Default = ModeType.Move,
 }
 
+interface MarkerObjects {
+    position: [x: number, y: number, z: number]
+    key: string
+    name: string
+}
+
+interface ProjectObjects {
+    markers: MarkerObjects[]
+}
+
 export const Editor = () => {
     const containerRef = useRef<HTMLDivElement>(null)
     const highlighter = useRef<Mesh>(null!)
@@ -32,6 +44,7 @@ export const Editor = () => {
     const [mode, setMode] = useState(ModeType.Default)
 
     const [markers, setMarkers] = useState<React.ReactElement[]>([])
+    const [markerArray, setMarkerArray] = useState<MarkerObjects[]>([])
 
     const [dirty, setDirty] = useState(false)
 
@@ -71,10 +84,12 @@ export const Editor = () => {
         }
 
         const handleOnMouseClick = () => {
+            const uuid = generateUUID()
+
             setMarkers((markers) => [
                 ...markers,
                 <Marker
-                    key={`marker-${markers.length}`}
+                    key={uuid}
                     position={
                         new Vector3(
                             highlighter.current.position.x,
@@ -82,8 +97,21 @@ export const Editor = () => {
                             highlighter.current.position.z
                         )
                     }
-                    name={`marker-${markers.length}`}
+                    name={`marker-${uuid.split("-")[0]}`}
                 />,
+            ])
+
+            setMarkerArray((markerArray) => [
+                ...markerArray,
+                {
+                    key: uuid,
+                    name: `marker-${uuid.split("-")[0]}`,
+                    position: [
+                        highlighter.current.position.x,
+                        0.01,
+                        highlighter.current.position.z,
+                    ],
+                },
             ])
         }
 
@@ -112,23 +140,45 @@ export const Editor = () => {
                 : sidePanelDisclosure.onOpen()
         }
 
-        const handleObjectDelete = (objectName: string) => {
+        const handleObjectDelete = (objectKey: string) => {
             markers.forEach((item, idx) => {
-                if (item.key === objectName) {
+                if (item.key === objectKey) {
                     markers.splice(idx, 1)
                 }
             })
-            console.log(markers)
+
+            markerArray.forEach((item, idx) => {
+                if (item.key === objectKey) {
+                    markerArray.splice(idx, 1)
+                }
+            })
+
             setMarkers(markers)
             setDirty(!dirty)
         }
 
-        const [selectedObj, setSelectedObj] = useState("")
+        const [objNewName, setObjNewName] = useState("")
+        const handleNameChange = (objectKey: string, newName: string) => {
+            markers.forEach((item, idx) => {
+                if (item.key === objectKey) {
+                    const markerWithNewName = React.cloneElement(markers[idx], {
+                        name: newName,
+                    })
+                    markers.splice(idx, 1)
+                    setMarkers(markers)
+                    setMarkers((markers) => [...markers, markerWithNewName])
 
-        const handleOnSelect = (thisObj: string) => {
-            thisObj === selectedObj
-                ? setSelectedObj("")
-                : setSelectedObj(thisObj)
+                    markerArray[idx].name = newName
+                    const markerItemWithNewName = markerArray[idx]
+                    markerArray.splice(idx, 1)
+                    setMarkerArray(markerArray)
+                    setMarkerArray((markerArray) => [
+                        ...markerArray,
+                        markerItemWithNewName,
+                    ])
+                }
+            })
+            setDirty(!dirty)
         }
 
         return (
@@ -154,31 +204,44 @@ export const Editor = () => {
                     <p>{`${mode} Mode`}</p>
 
                     <div className="flex w-full flex-col gap-2">
-                        {markers.map((item) => (
+                        {markerArray.map((item) => (
                             <div
                                 key={item.key}
-                                className={`flex select-none justify-between rounded-md border border-neutral-100 p-2 ${
-                                    selectedObj === item.key?.toString()
-                                        ? "bg-indigo-400"
-                                        : ""
-                                }`}
-                                onClick={() =>
-                                    handleOnSelect(item.key!.toString())
+                                className={
+                                    "flex select-none justify-between rounded-md border border-neutral-100 p-2"
                                 }
                             >
-                                <p>{item.key}</p>
+                                <div>
+                                    <input
+                                        className="text-neutral-800"
+                                        placeholder="Marker's Name"
+                                        defaultValue={item.name}
+                                        onChange={(e) =>
+                                            setObjNewName(e.target.value)
+                                        }
+                                    />
+                                </div>
 
                                 <IconContext.Provider value={{ size: "24px" }}>
-                                    <div
-                                        onMouseOver={(e) => e.stopPropagation()}
-                                    >
+                                    <div>
+                                        <span
+                                            className="cursor-pointer"
+                                            title="Save name"
+                                            onClick={() =>
+                                                handleNameChange(
+                                                    item.key,
+                                                    objNewName
+                                                )
+                                            }
+                                        >
+                                            <IoMdCheckmark />
+                                        </span>
+
                                         <span
                                             className="cursor-pointer"
                                             title="Delete this object"
                                             onClick={() =>
-                                                handleObjectDelete(
-                                                    item.key!.toString()
-                                                )
+                                                handleObjectDelete(item.key)
                                             }
                                         >
                                             <IoMdClose />

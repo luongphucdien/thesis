@@ -6,10 +6,9 @@ interface MarkerRef {
     position: Vector3
     name: string
     color?: string
-    isSelected?: boolean
 }
 export const Marker = (props: MarkerRef) => {
-    const { position, name, color, isSelected = false } = props
+    const { position, name, color } = props
 
     const markerRef = useRef<Mesh>(null!)
 
