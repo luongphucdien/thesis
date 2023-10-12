@@ -7,12 +7,16 @@ import { Button, LinkButton } from "../../components/button"
 export const Home = () => {
     // ---FOR MOBILE TEST ONLY, REMOVE FOR PRODUCTION BUILD--- //
     const nav = useNavigate()
-    const [cookies, setCookies] = useCookies(["userToken"])
-    const addUserToken = () => {
+    const [cookies, setCookies] = useCookies(["userToken", "userUID"])
+    // const userUID = Buffer.from("work.luongphucdien@gmail.com").toString(
+    //     "base64"
+    // )
+    const mobileTest = () => {
         setCookies("userToken", "TEST---FOR MOBILE ONLY", {
             path: "/",
             maxAge: 86400,
         })
+        // setCookies("userUID", userUID, { path: "/", maxAge: 86400 })
         nav(0)
     }
     // ---FOR MOBILE TEST ONLY, REMOVE FOR PRODUCTION BUILD--- //
@@ -33,7 +37,7 @@ export const Home = () => {
                     To Sign In
                 </LinkButton>
 
-                <Button onClick={addUserToken}>FOR MOBILE ONLY</Button>
+                <Button onClick={mobileTest}>FOR MOBILE ONLY</Button>
             </div>
         </div>
     )

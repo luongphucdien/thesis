@@ -13,10 +13,12 @@ import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import { FaChevronLeft } from "react-icons/fa6"
 import { useNavigate } from "react-router-dom"
+import { generateUUID } from "three/src/math/MathUtils.js"
 import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { CoordinateTable } from "../../components/coordinate-table"
 import { TextField } from "../../components/text-field"
+import { Marker } from "./Marker"
 
 interface MarkerObj {
     position: THREE.Vector3
@@ -31,7 +33,12 @@ export const ARScene = () => {
     const markerRef = useRef<THREE.Mesh>(null!)
     const [markerColor, setMarkerColor] = useState<any>("blue")
 
-    const Marker = () => {
+    const [markers, setMarkers] = useState<React.ReactElement[]>([])
+    const [dirty, setDirty] = useState(false)
+
+    const [sessionEnd, setSessionEnd] = useState(false)
+
+    const MarkerPreview = () => {
         useHitTest((hitMatrix: THREE.Matrix4) => {
             hitMatrix.decompose(
                 markerRef.current.position,
@@ -43,6 +50,17 @@ export const ARScene = () => {
         const handleOnSelect = () => {
             setMarkerColor((Math.random() * 0xffffff) | 0)
             markerArray.current.push({ position: markerRef.current.position })
+
+            const uuid = generateUUID()
+            setMarkers((markers) => [
+                ...markers,
+                <Marker
+                    key={uuid}
+                    name=""
+                    position={markerRef.current.position}
+                />,
+            ])
+            setDirty(!dirty)
         }
 
         return (
@@ -66,6 +84,7 @@ export const ARScene = () => {
     const onSessionEnd = () => {
         setIsARMode(false)
         setShow(true)
+        setSessionEnd(true)
     }
 
     const navigate = useNavigate()
@@ -89,7 +108,6 @@ export const ARScene = () => {
                             <FaChevronLeft />
                         </a>
                     </IconContext.Provider>
-                    <p>End</p>
                 </div>
             )}
 
@@ -178,12 +196,17 @@ export const ARScene = () => {
                                     </div>
                                 </>
                             ) : (
-                                <div className="flex flex-col items-center gap-2 text-center">
+                                <div className="flex flex-col items-center gap-4 text-center">
                                     <p>Hmm, there are no markers here.</p>
                                     <p>
                                         Please try to scan again and remember to
                                         tap the marker at the right position!
                                     </p>
+                                    <div>
+                                        <Button onClick={() => navigate(0)}>
+                                            Try again
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
                         </>
@@ -203,7 +226,7 @@ export const ARScene = () => {
                 </div>
             )}
 
-            <ARButton />
+            {!sessionEnd && <ARButton />}
 
             <div className="h-full w-full">
                 <Canvas>
@@ -216,8 +239,19 @@ export const ARScene = () => {
                             <>
                                 <ambientLight />
                                 <pointLight position={[10, 10, 10]} />
-                                <Marker />
+                                <MarkerPreview />
                                 <Controllers />
+
+                                <mesh
+                                    position={[1000, 1000, 1000]}
+                                    visible={dirty}
+                                >
+                                    <boxGeometry args={[0.1, 0.1, 0.1]} />
+                                </mesh>
+
+                                {markers.map((m) => (
+                                    <>{m}</>
+                                ))}
                             </>
                         )}
                     </XR>
