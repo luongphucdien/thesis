@@ -1,6 +1,7 @@
 import { MapControls } from "@react-three/drei"
 import { Canvas, ThreeEvent, useThree } from "@react-three/fiber"
 import React, { useRef, useState } from "react"
+import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import {
     IoIosArrowBack,
@@ -15,6 +16,8 @@ import { TbAugmentedReality } from "react-icons/tb"
 import { Link, useNavigate } from "react-router-dom"
 import { Mesh, Raycaster, Vector2, Vector3 } from "three"
 import { generateUUID } from "three/src/math/MathUtils.js"
+import { saveProject } from "../../api"
+import { Button } from "../../components/button"
 import { useDisclosure } from "../../util/useDisclosure"
 import { Marker } from "./Marker"
 
@@ -33,15 +36,20 @@ interface MarkerObjects {
 }
 
 interface ProjectObjects {
+    name: string
     markers: MarkerObjects[]
 }
 
 export const Editor = () => {
+    const [cookies] = useCookies(["userUID"])
+
     const containerRef = useRef<HTMLDivElement>(null)
     const highlighter = useRef<Mesh>(null!)
 
     const [objectFound, setObjectFound] = useState<boolean>(false)
     const [mode, setMode] = useState(ModeType.Default)
+
+    const [projName, setProjName] = useState("")
 
     const [markers, setMarkers] = useState<React.ReactElement[]>([])
     const [markerArray, setMarkerArray] = useState<MarkerObjects[]>([])
@@ -78,7 +86,7 @@ export const Editor = () => {
             })
 
             const objName = intersects[1].object.name
-            const markerRegEx = new RegExp("^marker-[0-9]+$")
+            const markerRegEx = new RegExp("^marker-[^ ]+$")
 
             setObjectFound(markerRegEx.test(objName))
         }
@@ -181,6 +189,27 @@ export const Editor = () => {
             setDirty(!dirty)
         }
 
+        const handleOnSaveSuccess = () => {
+            alert("Save successfully!")
+        }
+        const handleOnSaveFailure = () => {
+            alert("Save failed")
+        }
+
+        const handleSave = () => {
+            const thisProject: ProjectObjects = {
+                name: projName,
+                markers: markerArray,
+            }
+            saveProject(
+                cookies.userUID,
+                thisProject,
+                projName,
+                handleOnSaveSuccess,
+                handleOnSaveFailure
+            )
+        }
+
         return (
             <div
                 className={`pointer-events-auto absolute top-0 z-[999] flex h-full w-80 items-center text-neutral-100 ${
@@ -250,49 +279,64 @@ export const Editor = () => {
                                 </IconContext.Provider>
                             </div>
                         ))}
+
+                        {markerArray.length > 0 && (
+                            <>
+                                <Button
+                                    variant="non opaque"
+                                    onClick={handleSave}
+                                    disabled={projName === ""}
+                                >
+                                    Save
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
         )
     }
 
-    const ToolBar = () => {
-        const ModeButton = ({
-            children,
-            modeType,
-        }: React.PropsWithChildren<{ modeType: ModeType }>) => {
-            return (
-                <span
-                    className={`cursor-pointer rounded-md p-1 ${
-                        modeType === mode ? "bg-indigo-800" : ""
-                    }`}
-                    onClick={() => setMode(modeType)}
-                    title={modeType}
-                >
-                    {children}
-                </span>
-            )
-        }
-
-        const modes = [
-            <ModeButton key={"mode-move"} modeType={ModeType.Default}>
-                <IoIosMove />
-            </ModeButton>,
-
-            <ModeButton key={"mode-marker"} modeType={ModeType.Marker}>
-                <IoMdPin />
-            </ModeButton>,
-
-            <ModeButton key={"mode-ar"} modeType={ModeType.AR}>
-                <Link to={"/ar"}>
-                    <TbAugmentedReality />
-                </Link>
-            </ModeButton>,
-        ]
-
-        const nav = useNavigate()
-
+    const ModeButton = ({
+        children,
+        modeType,
+    }: React.PropsWithChildren<{ modeType: ModeType }>) => {
         return (
+            <span
+                className={`cursor-pointer rounded-md p-1 ${
+                    modeType === mode ? "bg-indigo-800" : ""
+                }`}
+                onClick={() => setMode(modeType)}
+                title={modeType}
+            >
+                {children}
+            </span>
+        )
+    }
+
+    const modes = [
+        <ModeButton key={"mode-move"} modeType={ModeType.Default}>
+            <IoIosMove />
+        </ModeButton>,
+
+        <ModeButton key={"mode-marker"} modeType={ModeType.Marker}>
+            <IoMdPin />
+        </ModeButton>,
+
+        <ModeButton key={"mode-ar"} modeType={ModeType.AR}>
+            <Link to={"/ar"}>
+                <TbAugmentedReality />
+            </Link>
+        </ModeButton>,
+    ]
+
+    const nav = useNavigate()
+
+    return (
+        <div
+            className="relative h-[100vh] w-[100vw] overflow-hidden"
+            ref={containerRef}
+        >
             <div className="fixed left-0 top-0 z-[999] flex h-12 w-full items-center gap-5 bg-indigo-600 px-2 text-neutral-100">
                 <IconContext.Provider value={{ size: "20px" }}>
                     <span
@@ -307,6 +351,7 @@ export const Editor = () => {
                         <input
                             placeholder="Project Name"
                             className="text-neutral-800"
+                            onChange={(e) => setProjName(e.target.value)}
                         />
                     </div>
 
@@ -317,15 +362,7 @@ export const Editor = () => {
                     ))}
                 </IconContext.Provider>
             </div>
-        )
-    }
 
-    return (
-        <div
-            className="relative h-[100vh] w-[100vw] overflow-hidden"
-            ref={containerRef}
-        >
-            <ToolBar />
             <SidePanel />
 
             <Canvas camera={{ position: [0, 10, 0] }}>
@@ -338,12 +375,10 @@ export const Editor = () => {
                     position={[0.5, 0.01, 0.5]}
                     rotation={[Math.PI * -0.5, 0, 0]}
                     ref={highlighter}
+                    visible={objectFound ? false : true}
                 >
                     <planeGeometry />
-                    <meshBasicMaterial
-                        color={"green"}
-                        visible={objectFound ? false : true}
-                    />
+                    <meshBasicMaterial color={"green"} />
                 </mesh>
 
                 <mesh visible={dirty} position={[1000, 1000, 1000]}>
