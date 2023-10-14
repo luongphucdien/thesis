@@ -1,11 +1,14 @@
+import { useLocalStorage } from "@uidotdev/usehooks"
 import { useEffect } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import { FaPlus } from "react-icons/fa"
 import { TbAugmentedReality, TbMenu } from "react-icons/tb"
 import { Link, useNavigate } from "react-router-dom"
+import { fetchProjects } from "../../api"
 import { Button } from "../../components/button"
 import { Slot } from "../../components/slot"
+import { ProjectObjects } from "../../core/editor/Editor"
 import { useDisclosure } from "../../util/useDisclosure"
 
 export const Dashboard = () => {
@@ -13,6 +16,23 @@ export const Dashboard = () => {
         "userToken",
         "userUID",
     ])
+
+    const [projects, setProjects] = useLocalStorage<ProjectObjects[]>(
+        "projects",
+        [
+            {
+                markers: [],
+                name: "",
+            },
+        ]
+    )
+
+    const onFetchSuccess = (projects: object) => {
+        setProjects(Object.values(projects))
+    }
+    const onFetchFailure = () => {
+        console.log("Failed")
+    }
 
     useEffect(() => {
         cookies.userToken &&
@@ -26,6 +46,8 @@ export const Dashboard = () => {
                 path: "/",
                 maxAge: 86400,
             })
+
+        fetchProjects(cookies.userUID, onFetchSuccess, onFetchFailure)
     }, [])
 
     const collapsibleDisclosure = useDisclosure()
@@ -86,7 +108,7 @@ export const Dashboard = () => {
             </div>
 
             <div className="h-full flex-1 p-5 sm:px-10">
-                <div className="grid grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-4 sm:gap-x-20">
+                <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-4 sm:gap-x-20">
                     <Link to="/project/new" className="hidden sm:block">
                         <Slot>
                             <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-2xl border-8 border-dashed text-gray-400">
@@ -116,6 +138,16 @@ export const Dashboard = () => {
                             </div>
                         </Slot>
                     </Link>
+
+                    {projects.map((proj) => (
+                        <Slot key={proj.name}>
+                            <div className="flex h-full flex-col items-center justify-center rounded-2xl border-8 text-gray-600">
+                                <p className="text-2xl font-bold">
+                                    {proj.name}
+                                </p>
+                            </div>
+                        </Slot>
+                    ))}
                 </div>
             </div>
         </div>
