@@ -119,3 +119,23 @@ export const saveProject = async (
             console.log(error)
         })
 }
+
+export const fetchProjects = async (
+    base64Email: string,
+    onSuccessCallback: (projects: object) => void,
+    onFailureCallback: () => void
+) => {
+    await axios
+        .get(`${API_URL}/api/user/${base64Email}/projects`)
+        .then((res) => {
+            if (res.data.code === HttpStatusCode.Ok) {
+                onSuccessCallback(res.data.projects)
+            } else {
+                onFailureCallback()
+            }
+        })
+        .catch((error) => {
+            onFailureCallback()
+            console.log(error)
+        })
+}

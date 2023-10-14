@@ -35,7 +35,7 @@ interface MarkerObjects {
     name: string
 }
 
-interface ProjectObjects {
+export interface ProjectObjects {
     name: string
     markers: MarkerObjects[]
 }
@@ -229,7 +229,7 @@ export const Editor = () => {
                     </IconContext.Provider>
                 </span>
 
-                <div className="flex h-full flex-1 flex-col items-center gap-5 bg-indigo-500 p-4">
+                <div className="flex h-full flex-1 flex-col items-center gap-5 overflow-auto bg-indigo-500 p-4">
                     <p>{`${mode} Mode`}</p>
 
                     <div className="flex w-full flex-col gap-2">
