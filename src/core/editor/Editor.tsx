@@ -11,7 +11,7 @@ import {
     IoMdArrowBack,
     IoMdCheckmark,
     IoMdClose,
-    IoMdPin,
+    IoMdGrid,
 } from "react-icons/io"
 import { TbAugmentedReality } from "react-icons/tb"
 import { Link, useNavigate, useParams } from "react-router-dom"
@@ -20,25 +20,24 @@ import { generateUUID } from "three/src/math/MathUtils.js"
 import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { useDisclosure } from "../../util/useDisclosure"
-import { Marker } from "./Marker"
+import { Floor } from "./Floor"
+import { ModeType } from "./ModeType"
 
-enum ModeType {
-    Move = "Move",
-    Marker = "Add Marker",
-    Delete = "Delete",
-    AR = "AR",
-    Default = ModeType.Move,
-}
-
-interface MarkerObjects {
+interface FPObject {
     position: [x: number, y: number, z: number]
     key: string
     name: string
 }
+interface MarkerObject extends FPObject {}
+
+interface FloorObject extends FPObject {
+    width: number
+    length: number
+}
 
 export interface ProjectObjects {
     name: string
-    markers: MarkerObjects[]
+    markers: MarkerObject[]
 }
 
 export const Editor = () => {
@@ -54,19 +53,24 @@ export const Editor = () => {
 
     const [projName, setProjName] = useState("")
 
-    const [markerArray, setMarkerArray] = useState<MarkerObjects[]>([])
+    const widthRef = useRef<HTMLInputElement>(null!)
+    const lengthRef = useRef<HTMLInputElement>(null!)
+    const [floorDimension, setFloorDimension] = useState<{
+        width: number
+        length: number
+    }>({ length: 10, width: 10 })
+
+    const [markerArray, setMarkerArray] = useState<MarkerObject[]>([])
+    const [floorArray, setFloorArray] = useState<FloorObject[]>([])
 
     const [dirty, setDirty] = useState(false)
 
-    const [projects, setProjects] = useLocalStorage<ProjectObjects[]>(
-        "projects",
-        [
-            {
-                markers: [],
-                name: "",
-            },
-        ]
-    )
+    const [projects, _] = useLocalStorage<ProjectObjects[]>("projects", [
+        {
+            markers: [],
+            name: "",
+        },
+    ])
 
     useEffect(() => {
         projects.forEach((item) => {
@@ -107,25 +111,46 @@ export const Editor = () => {
 
             const objName = intersects[1].object.name
             const markerRegEx = new RegExp("^marker-[^ ]+$")
+            const floorRegEx = new RegExp("^floor-[^ ]+$")
 
-            setObjectFound(markerRegEx.test(objName))
+            setObjectFound(
+                markerRegEx.test(objName) || floorRegEx.test(objName)
+            )
         }
 
         const handleOnMouseClick = () => {
             const uuid = generateUUID()
 
-            setMarkerArray((markerArray) => [
-                ...markerArray,
-                {
-                    key: uuid,
-                    name: `marker-${uuid.split("-")[0]}`,
-                    position: [
-                        highlighter.current.position.x,
-                        0.01,
-                        highlighter.current.position.z,
-                    ],
-                },
-            ])
+            if (mode === ModeType.Floor) {
+                console.log("asdasd")
+                setFloorArray((floorArray) => [
+                    ...floorArray,
+                    {
+                        width: floorDimension.width,
+                        length: floorDimension.length,
+                        key: uuid,
+                        name: `floor-${uuid.split("-")[0]}`,
+                        position: [
+                            highlighter.current.position.x,
+                            0.01,
+                            highlighter.current.position.z,
+                        ],
+                    },
+                ])
+            }
+
+            // setMarkerArray((markerArray) => [
+            //     ...markerArray,
+            //     {
+            //         key: uuid,
+            //         name: `marker-${uuid.split("-")[0]}`,
+            //         position: [
+            //             highlighter.current.position.x,
+            //             0.01,
+            //             highlighter.current.position.z,
+            //         ],
+            //     },
+            // ])
         }
 
         return (
@@ -192,6 +217,13 @@ export const Editor = () => {
             )
         }
 
+        const handleSetFloorDimension = () => {
+            setFloorDimension({
+                width: parseFloat(widthRef.current.value),
+                length: parseFloat(lengthRef.current.value),
+            })
+        }
+
         return (
             <div
                 className={`pointer-events-auto absolute top-0 z-[999] flex h-full w-80 items-center text-neutral-100 ${
@@ -215,52 +247,116 @@ export const Editor = () => {
                     <p>{`${mode} Mode`}</p>
 
                     <div className="flex w-full flex-col gap-2">
-                        {markerArray.map((item) => (
-                            <div
-                                key={item.key}
-                                className={
-                                    "flex select-none justify-between rounded-md border border-neutral-100 p-2"
-                                }
-                            >
-                                <div>
-                                    <input
-                                        className="text-neutral-800"
-                                        placeholder="Marker's Name"
-                                        defaultValue={item.name}
-                                        onChange={(e) =>
-                                            setObjNewName(e.target.value)
+                        {floorArray.length > 0 && (
+                            <div className="flex flex-col items-center">
+                                <p>Floors</p>
+                                {floorArray.map((f) => (
+                                    <div
+                                        key={f.key}
+                                        className={
+                                            "flex w-full select-none flex-col justify-between gap-4 rounded-md border border-neutral-100 p-2"
                                         }
-                                    />
-                                </div>
+                                    >
+                                        <table className="[&>tr:last-child>td]:pb-0 [&>tr>td:first-child]:pr-4 [&>tr>td]:pb-2">
+                                            <tr>
+                                                <td>Name</td>
+                                                <td>
+                                                    <input
+                                                        className="w-full text-neutral-800"
+                                                        placeholder="Marker's Name"
+                                                        defaultValue={f.name}
+                                                        onChange={(e) =>
+                                                            setObjNewName(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                    />
+                                                </td>
+                                            </tr>
 
-                                <IconContext.Provider value={{ size: "24px" }}>
-                                    <div>
-                                        <span
-                                            className="cursor-pointer"
-                                            title="Save name"
-                                            onClick={() =>
-                                                handleNameChange(
-                                                    item.key,
-                                                    objNewName
-                                                )
-                                            }
-                                        >
-                                            <IoMdCheckmark />
-                                        </span>
+                                            <tr>
+                                                <td>Width</td>
+                                                <td>
+                                                    <input className="w-full" />
+                                                </td>
+                                            </tr>
 
-                                        <span
-                                            className="cursor-pointer"
-                                            title="Delete this object"
-                                            onClick={() =>
-                                                handleObjectDelete(item.key)
-                                            }
+                                            <tr>
+                                                <td>Length</td>
+                                                <td>
+                                                    <input className="w-full" />
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <IconContext.Provider
+                                            value={{ size: "24px" }}
                                         >
-                                            <IoMdClose />
-                                        </span>
+                                            <div className="flex w-full flex-row-reverse">
+                                                <span
+                                                    className="cursor-pointer"
+                                                    title="Save name"
+                                                    onClick={() =>
+                                                        handleNameChange(
+                                                            f.key,
+                                                            objNewName
+                                                        )
+                                                    }
+                                                >
+                                                    <IoMdCheckmark />
+                                                </span>
+
+                                                <span
+                                                    className="cursor-pointer"
+                                                    title="Delete this object"
+                                                    onClick={() =>
+                                                        handleObjectDelete(
+                                                            f.key
+                                                        )
+                                                    }
+                                                >
+                                                    <IoMdClose />
+                                                </span>
+                                            </div>
+                                        </IconContext.Provider>
                                     </div>
-                                </IconContext.Provider>
+                                ))}
                             </div>
-                        ))}
+                        )}
+
+                        {mode === ModeType.Floor && (
+                            <div className="flex flex-col justify-center gap-4 rounded-lg border px-4 pb-3">
+                                <table className="[&>tr>*:first-child]:pr-2 [&>tr>*:last-child]:pl-2 [&>tr>*]:py-2">
+                                    <tr>
+                                        <th>Width</th>
+                                        <th>Length</th>
+                                    </tr>
+
+                                    <tr className="text-neutral-800">
+                                        <td>
+                                            <input
+                                                className="w-full"
+                                                ref={widthRef}
+                                            />
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                className="w-full"
+                                                ref={lengthRef}
+                                            />
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <Button
+                                    variant="non opaque"
+                                    onClick={handleSetFloorDimension}
+                                >
+                                    Confirm
+                                </Button>
+                            </div>
+                        )}
 
                         {markerArray.length > 0 && (
                             <>
@@ -301,8 +397,8 @@ export const Editor = () => {
             <IoIosMove />
         </ModeButton>,
 
-        <ModeButton key={"mode-marker"} modeType={ModeType.Marker}>
-            <IoMdPin />
+        <ModeButton key={"mode-floor"} modeType={ModeType.Floor}>
+            <IoMdGrid />
         </ModeButton>,
 
         <ModeButton key={"mode-ar"} modeType={ModeType.AR}>
@@ -354,13 +450,25 @@ export const Editor = () => {
                     <meshBasicMaterial visible={false} />
                 </mesh>
 
-                <mesh
-                    position={[0.5, 0.01, 0.5]}
+                {/* <mesh
+                    position={[0.5, 0.02, 0.5]}
                     rotation={[Math.PI * -0.5, 0, 0]}
                     ref={highlighter}
-                    visible={objectFound ? false : true}
+                    visible={!objectFound}
                 >
-                    <planeGeometry />
+                    <PreviewMarker mode={mode} />
+                    <meshBasicMaterial color={"green"} />
+                </mesh> */}
+
+                <mesh
+                    position={[0.5, 0.02, 0.5]}
+                    rotation={[Math.PI * -0.5, 0, 0]}
+                    ref={highlighter}
+                    visible={!objectFound && mode !== ModeType.Move}
+                >
+                    <planeGeometry
+                        args={[floorDimension.width, floorDimension.length]}
+                    />
                     <meshBasicMaterial color={"green"} />
                 </mesh>
 
@@ -369,21 +477,13 @@ export const Editor = () => {
                 </mesh>
 
                 <group>
-                    {/* {markers.map((marker) => (
-                        <>{marker}</>
-                    ))} */}
-
-                    {markerArray.map((m) => (
-                        <Marker
+                    {floorArray.map((m) => (
+                        <Floor
                             key={m.key}
                             name={m.name}
-                            position={
-                                new Vector3(
-                                    m.position[0],
-                                    m.position[1],
-                                    m.position[2]
-                                )
-                            }
+                            position={m.position}
+                            width={m.width}
+                            length={m.length}
                         />
                     ))}
                 </group>
