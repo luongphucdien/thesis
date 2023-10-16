@@ -1,6 +1,7 @@
 import { MapControls } from "@react-three/drei"
 import { Canvas, ThreeEvent, useThree } from "@react-three/fiber"
-import React, { useRef, useState } from "react"
+import { useLocalStorage } from "@uidotdev/usehooks"
+import React, { useEffect, useRef, useState } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import {
@@ -13,7 +14,7 @@ import {
     IoMdPin,
 } from "react-icons/io"
 import { TbAugmentedReality } from "react-icons/tb"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import { Mesh, Raycaster, Vector2, Vector3 } from "three"
 import { generateUUID } from "three/src/math/MathUtils.js"
 import { saveProject } from "../../api"
@@ -41,6 +42,8 @@ export interface ProjectObjects {
 }
 
 export const Editor = () => {
+    const params = useParams()
+
     const [cookies] = useCookies(["userUID"])
 
     const containerRef = useRef<HTMLDivElement>(null)
@@ -51,10 +54,27 @@ export const Editor = () => {
 
     const [projName, setProjName] = useState("")
 
-    const [markers, setMarkers] = useState<React.ReactElement[]>([])
     const [markerArray, setMarkerArray] = useState<MarkerObjects[]>([])
 
     const [dirty, setDirty] = useState(false)
+
+    const [projects, setProjects] = useLocalStorage<ProjectObjects[]>(
+        "projects",
+        [
+            {
+                markers: [],
+                name: "",
+            },
+        ]
+    )
+
+    useEffect(() => {
+        projects.forEach((item) => {
+            if (item.name === params.name) {
+                setMarkerArray(item.markers)
+            }
+        })
+    }, [])
 
     const CustomGrid = () => {
         const { camera, scene } = useThree()
@@ -93,21 +113,6 @@ export const Editor = () => {
 
         const handleOnMouseClick = () => {
             const uuid = generateUUID()
-
-            setMarkers((markers) => [
-                ...markers,
-                <Marker
-                    key={uuid}
-                    position={
-                        new Vector3(
-                            highlighter.current.position.x,
-                            0.01,
-                            highlighter.current.position.z
-                        )
-                    }
-                    name={`marker-${uuid.split("-")[0]}`}
-                />,
-            ])
 
             setMarkerArray((markerArray) => [
                 ...markerArray,
@@ -149,43 +154,20 @@ export const Editor = () => {
         }
 
         const handleObjectDelete = (objectKey: string) => {
-            markers.forEach((item, idx) => {
-                if (item.key === objectKey) {
-                    markers.splice(idx, 1)
-                }
-            })
-
-            markerArray.forEach((item, idx) => {
-                if (item.key === objectKey) {
-                    markerArray.splice(idx, 1)
-                }
-            })
-
-            setMarkers(markers)
+            setMarkerArray(markerArray.filter((m) => m.key !== objectKey))
             setDirty(!dirty)
         }
 
         const [objNewName, setObjNewName] = useState("")
         const handleNameChange = (objectKey: string, newName: string) => {
-            markers.forEach((item, idx) => {
-                if (item.key === objectKey) {
-                    const markerWithNewName = React.cloneElement(markers[idx], {
-                        name: newName,
-                    })
-                    markers.splice(idx, 1)
-                    setMarkers(markers)
-                    setMarkers((markers) => [...markers, markerWithNewName])
-
-                    markerArray[idx].name = newName
-                    const markerItemWithNewName = markerArray[idx]
-                    markerArray.splice(idx, 1)
-                    setMarkerArray(markerArray)
-                    setMarkerArray((markerArray) => [
-                        ...markerArray,
-                        markerItemWithNewName,
-                    ])
+            const newMarkerArray = markerArray.map((m) => {
+                if (m.key === objectKey) {
+                    return { ...m, name: newName }
+                } else {
+                    return m
                 }
             })
+            setMarkerArray(newMarkerArray)
             setDirty(!dirty)
         }
 
@@ -352,6 +334,7 @@ export const Editor = () => {
                             placeholder="Project Name"
                             className="text-neutral-800"
                             onChange={(e) => setProjName(e.target.value)}
+                            defaultValue={params.name}
                         />
                     </div>
 
@@ -386,8 +369,22 @@ export const Editor = () => {
                 </mesh>
 
                 <group>
-                    {markers.map((marker) => (
+                    {/* {markers.map((marker) => (
                         <>{marker}</>
+                    ))} */}
+
+                    {markerArray.map((m) => (
+                        <Marker
+                            key={m.key}
+                            name={m.name}
+                            position={
+                                new Vector3(
+                                    m.position[0],
+                                    m.position[1],
+                                    m.position[2]
+                                )
+                            }
+                        />
                     ))}
                 </group>
 

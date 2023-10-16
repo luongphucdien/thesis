@@ -140,13 +140,15 @@ export const Dashboard = () => {
                     </Link>
 
                     {projects.map((proj) => (
-                        <Slot key={proj.name}>
-                            <div className="flex h-full flex-col items-center justify-center rounded-2xl border-8 text-gray-600">
-                                <p className="text-2xl font-bold">
-                                    {proj.name}
-                                </p>
-                            </div>
-                        </Slot>
+                        <Link key={proj.name} to={`/project/${proj.name}`}>
+                            <Slot>
+                                <div className="flex h-full flex-col items-center justify-center rounded-2xl border-8 text-gray-600">
+                                    <p className="text-2xl font-bold">
+                                        {proj.name}
+                                    </p>
+                                </div>
+                            </Slot>
+                        </Link>
                     ))}
                 </div>
             </div>
