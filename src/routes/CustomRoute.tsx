@@ -49,6 +49,15 @@ export const CustomRoute = () => {
             />
 
             <Route
+                path="/project/:name"
+                element={
+                    <PrivatePage>
+                        <Editor />
+                    </PrivatePage>
+                }
+            />
+
+            <Route
                 path="/ar"
                 element={
                     <PrivatePage>
