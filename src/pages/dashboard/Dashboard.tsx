@@ -1,12 +1,13 @@
 import { useLocalStorage } from "@uidotdev/usehooks"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import { FaPlus } from "react-icons/fa"
 import { TbAugmentedReality, TbMenu } from "react-icons/tb"
 import { Link, useNavigate } from "react-router-dom"
-import { fetchProjects } from "../../api"
+import { deleteProject, fetchProjects } from "../../api"
 import { Button } from "../../components/button"
+import { Modal } from "../../components/modal"
 import { Slot } from "../../components/slot"
 import { ProjectObjects } from "../../core/editor/Editor"
 import { useDisclosure } from "../../util/useDisclosure"
@@ -21,14 +22,14 @@ export const Dashboard = () => {
         "projects",
         [
             {
-                markers: [],
+                floors: [],
                 name: "",
             },
         ]
     )
 
     const onFetchSuccess = (projects: object) => {
-        setProjects(Object.values(projects))
+        setProjects(projects ? Object.values(projects) : [])
     }
     const onFetchFailure = () => {
         console.log("Failed")
@@ -61,6 +62,18 @@ export const Dashboard = () => {
     const handleSignOut = () => {
         removeCookie("userToken")
         removeCookie("userUID")
+        nav(0)
+    }
+
+    const deleteModalDisclosure = useDisclosure()
+    const [projToBeDeleted, setProjToBeDeleted] = useState("")
+    const openDeleteModel = (name: string) => {
+        setProjToBeDeleted(name)
+        deleteModalDisclosure.onOpen()
+    }
+    const handleDeleteProject = (name: string) => {
+        deleteProject(name, cookies.userUID)
+        deleteModalDisclosure.onClose()
         nav(0)
     }
 
@@ -140,16 +153,58 @@ export const Dashboard = () => {
                     </Link>
 
                     {projects.map((proj) => (
-                        <Link key={proj.name} to={`/project/${proj.name}`}>
-                            <Slot>
-                                <div className="flex h-full flex-col items-center justify-center rounded-2xl border-8 text-gray-600">
-                                    <p className="text-2xl font-bold">
-                                        {proj.name}
-                                    </p>
+                        <div key={proj.name} className="group relative">
+                            <Link to={`/project/${proj.name}`}>
+                                <Slot>
+                                    <div className="flex h-full flex-col items-center justify-center rounded-2xl border-8 text-gray-600">
+                                        <p className="text-2xl font-bold">
+                                            {proj.name}
+                                        </p>
+                                    </div>
+                                </Slot>
+                            </Link>
+
+                            <div className="absolute -bottom-24 hidden w-full pt-8 group-hover:block">
+                                <div className="rounded-lg bg-neutral-100 p-4 shadow-md">
+                                    <Button
+                                        variant="error"
+                                        onClick={() =>
+                                            openDeleteModel(proj.name)
+                                        }
+                                    >
+                                        Delete
+                                    </Button>
                                 </div>
-                            </Slot>
-                        </Link>
+                            </div>
+                        </div>
                     ))}
+
+                    <Modal
+                        isOpen={deleteModalDisclosure.isOpen}
+                        onClose={deleteModalDisclosure.onClose}
+                    >
+                        <div className="flex flex-col items-center justify-center gap-5">
+                            <p className="text-2xl font-medium text-neutral-800">
+                                Delete {`"${projToBeDeleted}"`}?
+                            </p>
+                            <div className="flex justify-center gap-5">
+                                <Button
+                                    variant="primary"
+                                    onClick={deleteModalDisclosure.onClose}
+                                >
+                                    No
+                                </Button>
+                                <Button
+                                    variant="error"
+                                    onClick={() =>
+                                        handleDeleteProject(projToBeDeleted)
+                                    }
+                                >
+                                    Yes
+                                </Button>
+                            </div>
+                        </div>
+                    </Modal>
                 </div>
             </div>
         </div>

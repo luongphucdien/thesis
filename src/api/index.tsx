@@ -139,3 +139,9 @@ export const fetchProjects = async (
             console.log(error)
         })
 }
+
+export const deleteProject = async (name: string, userUID: string) => {
+    await axios
+        .delete(`${API_URL}/api/user/${userUID}/project/${name}`)
+        .catch((error) => console.log(error))
+}

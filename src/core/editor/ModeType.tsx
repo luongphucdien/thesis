@@ -1,6 +1,6 @@
 export enum ModeType {
     Move = "Move",
-    Marker = "Add Marker",
+    Save = "Save",
     Floor = "Add Floor",
     Delete = "Delete",
     AR = "AR",

@@ -12,6 +12,7 @@ import {
     IoMdCheckmark,
     IoMdClose,
     IoMdGrid,
+    IoMdSave,
 } from "react-icons/io"
 import { TbAugmentedReality } from "react-icons/tb"
 import { Link, useNavigate, useParams } from "react-router-dom"
@@ -28,7 +29,6 @@ interface FPObject {
     key: string
     name: string
 }
-interface MarkerObject extends FPObject {}
 
 interface FloorObject extends FPObject {
     width: number
@@ -37,7 +37,7 @@ interface FloorObject extends FPObject {
 
 export interface ProjectObjects {
     name: string
-    markers: MarkerObject[]
+    floors: FloorObject[]
 }
 
 export const Editor = () => {
@@ -51,7 +51,7 @@ export const Editor = () => {
     const [objectFound, setObjectFound] = useState<boolean>(false)
     const [mode, setMode] = useState(ModeType.Default)
 
-    const [projName, setProjName] = useState("")
+    const [projName, setProjName] = useState(params.name!)
 
     const widthRef = useRef<HTMLInputElement>(null!)
     const lengthRef = useRef<HTMLInputElement>(null!)
@@ -60,14 +60,13 @@ export const Editor = () => {
         length: number
     }>({ length: 10, width: 10 })
 
-    const [markerArray, setMarkerArray] = useState<MarkerObject[]>([])
     const [floorArray, setFloorArray] = useState<FloorObject[]>([])
 
     const [dirty, setDirty] = useState(false)
 
     const [projects, _] = useLocalStorage<ProjectObjects[]>("projects", [
         {
-            markers: [],
+            floors: [],
             name: "",
         },
     ])
@@ -75,9 +74,10 @@ export const Editor = () => {
     useEffect(() => {
         projects.forEach((item) => {
             if (item.name === params.name) {
-                setMarkerArray(item.markers)
+                setFloorArray(item.floors)
             }
         })
+        document.title = params.name!
     }, [])
 
     const CustomGrid = () => {
@@ -110,26 +110,22 @@ export const Editor = () => {
             })
 
             const objName = intersects[1].object.name
-            const markerRegEx = new RegExp("^marker-[^ ]+$")
-            const floorRegEx = new RegExp("^floor-[^ ]+$")
+            const floorRegEx = new RegExp("^<floor>:[^ ]+$")
 
-            setObjectFound(
-                markerRegEx.test(objName) || floorRegEx.test(objName)
-            )
+            setObjectFound(floorRegEx.test(objName))
         }
 
         const handleOnMouseClick = () => {
             const uuid = generateUUID()
 
             if (mode === ModeType.Floor) {
-                console.log("asdasd")
                 setFloorArray((floorArray) => [
                     ...floorArray,
                     {
                         width: floorDimension.width,
                         length: floorDimension.length,
-                        key: uuid,
-                        name: `floor-${uuid.split("-")[0]}`,
+                        key: `<floor>:${uuid}`,
+                        name: `<floor>:${uuid.split("-")[0]}`,
                         position: [
                             highlighter.current.position.x,
                             0.01,
@@ -138,19 +134,6 @@ export const Editor = () => {
                     },
                 ])
             }
-
-            // setMarkerArray((markerArray) => [
-            //     ...markerArray,
-            //     {
-            //         key: uuid,
-            //         name: `marker-${uuid.split("-")[0]}`,
-            //         position: [
-            //             highlighter.current.position.x,
-            //             0.01,
-            //             highlighter.current.position.z,
-            //         ],
-            //     },
-            // ])
         }
 
         return (
@@ -179,42 +162,27 @@ export const Editor = () => {
         }
 
         const handleObjectDelete = (objectKey: string) => {
-            setMarkerArray(markerArray.filter((m) => m.key !== objectKey))
+            const objType = objectKey.split(":")[0]
+            if (objType === "<floor>") {
+                setFloorArray(floorArray.filter((f) => f.key !== objectKey))
+            }
             setDirty(!dirty)
         }
 
         const [objNewName, setObjNewName] = useState("")
         const handleNameChange = (objectKey: string, newName: string) => {
-            const newMarkerArray = markerArray.map((m) => {
-                if (m.key === objectKey) {
-                    return { ...m, name: newName }
-                } else {
-                    return m
-                }
-            })
-            setMarkerArray(newMarkerArray)
-            setDirty(!dirty)
-        }
-
-        const handleOnSaveSuccess = () => {
-            alert("Save successfully!")
-        }
-        const handleOnSaveFailure = () => {
-            alert("Save failed")
-        }
-
-        const handleSave = () => {
-            const thisProject: ProjectObjects = {
-                name: projName,
-                markers: markerArray,
+            const objType = objectKey.split(":")[0]
+            if (objType === "<floor>") {
+                const newFloorArray = floorArray.map((f) => {
+                    if (f.key === objectKey) {
+                        return { ...f, name: `<floor>:${newName}` }
+                    } else {
+                        return f
+                    }
+                })
+                setFloorArray(newFloorArray)
             }
-            saveProject(
-                cookies.userUID,
-                thisProject,
-                projName,
-                handleOnSaveSuccess,
-                handleOnSaveFailure
-            )
+            setDirty(!dirty)
         }
 
         const handleSetFloorDimension = () => {
@@ -263,7 +231,7 @@ export const Editor = () => {
                                                 <td>
                                                     <input
                                                         className="w-full text-neutral-800"
-                                                        placeholder="Marker's Name"
+                                                        placeholder="Floor's Name"
                                                         defaultValue={f.name}
                                                         onChange={(e) =>
                                                             setObjNewName(
@@ -357,18 +325,6 @@ export const Editor = () => {
                                 </Button>
                             </div>
                         )}
-
-                        {markerArray.length > 0 && (
-                            <>
-                                <Button
-                                    variant="non opaque"
-                                    onClick={handleSave}
-                                    disabled={projName === ""}
-                                >
-                                    Save
-                                </Button>
-                            </>
-                        )}
                     </div>
                 </div>
             </div>
@@ -392,7 +348,38 @@ export const Editor = () => {
         )
     }
 
+    const handleOnSaveSuccess = () => {
+        alert("Save successfully!")
+        nav(-1)
+    }
+    const handleOnSaveFailure = () => {
+        alert("Save failed")
+    }
+
+    const handleSave = () => {
+        const thisProject: ProjectObjects = {
+            name: projName,
+            floors: floorArray,
+        }
+        saveProject(
+            cookies.userUID,
+            thisProject,
+            projName,
+            handleOnSaveSuccess,
+            handleOnSaveFailure
+        )
+    }
+
     const modes = [
+        <span
+            key={"mode-save"}
+            onClick={handleSave}
+            className={"cursor-pointer rounded-md p-1"}
+            title="Save"
+        >
+            <IoMdSave />
+        </span>,
+
         <ModeButton key={"mode-move"} modeType={ModeType.Default}>
             <IoIosMove />
         </ModeButton>,
