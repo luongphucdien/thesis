@@ -16,12 +16,12 @@ import {
 } from "react-icons/io"
 import { TbAugmentedReality } from "react-icons/tb"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { Mesh, Raycaster, Vector2, Vector3 } from "three"
+import { DoubleSide, Mesh, Raycaster, Vector2, Vector3 } from "three"
 import { generateUUID } from "three/src/math/MathUtils.js"
 import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { useDisclosure } from "../../util/useDisclosure"
-import { FloorObject, ProjectObjects } from "../ObjectInterface"
+import { FloorObject, PointObject, ProjectObjects } from "../ObjectInterface"
 import { Floor } from "./Floor"
 import { ModeType } from "./ModeType"
 
@@ -47,6 +47,11 @@ export const Editor = () => {
 
     const [floorArray, setFloorArray] = useState<FloorObject[]>([])
 
+    const [floorPoints, setFloorPoints] = useState<PointObject[]>([])
+    // const planeBufferRef = useRef<
+    const [positions, setPositions] = useState<number[]>([])
+    const [indices, setIndices] = useState<number[][]>([[]])
+
     const [dirty, setDirty] = useState(false)
 
     const [projects, _] = useLocalStorage<ProjectObjects[]>("projects", [
@@ -59,11 +64,17 @@ export const Editor = () => {
     useEffect(() => {
         projects.forEach((item) => {
             if (item.name === params.name) {
-                setFloorArray(item.floors!)
+                setFloorArray(item.floors ? item.floors : [])
+                setFloorPoints(item.floorBuffer!.points)
+                setPositions(item.floorBuffer!.positions)
             }
         })
         document.title = params.name!
     }, [])
+
+    // useEffect(() => {
+    //     positions.
+    // }, [positions])
 
     const CustomGrid = () => {
         const { camera, scene } = useThree()
@@ -449,15 +460,52 @@ export const Editor = () => {
                 </mesh>
 
                 <group>
-                    {floorArray.map((m) => (
-                        <Floor
-                            key={m.key}
-                            name={m.name}
-                            position={m.position}
-                            width={m.width!}
-                            length={m.length!}
-                        />
-                    ))}
+                    {floorArray.length > 0 &&
+                        floorArray.map((m) => (
+                            <Floor
+                                key={m.key}
+                                name={m.name}
+                                position={m.position}
+                                width={m.width!}
+                                length={m.length!}
+                            />
+                        ))}
+                </group>
+
+                <group>
+                    {floorPoints.length > 0 &&
+                        floorPoints.map((p) => (
+                            <mesh
+                                key={p.key}
+                                position={new Vector3(p.x, 0.05, p.z)}
+                            >
+                                <sphereGeometry args={[0.03]} />
+                                <meshBasicMaterial color={"red"} />
+                            </mesh>
+                        ))}
+                </group>
+
+                <group>
+                    <mesh>
+                        <bufferGeometry>
+                            <bufferAttribute
+                                attach={"attributes-position"}
+                                array={new Float32Array(positions)}
+                                count={new Float32Array(positions).length / 3}
+                                itemSize={3}
+                            />
+
+                            <bufferAttribute
+                                attach={"index"}
+                                array={
+                                    new Uint16Array([0, 1, 2, 1, 2, 3, 2, 3, 0])
+                                }
+                                count={9}
+                                itemSize={1}
+                            />
+                        </bufferGeometry>
+                        <meshBasicMaterial color={"blue"} side={DoubleSide} />
+                    </mesh>
                 </group>
 
                 <MapControls />

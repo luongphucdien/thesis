@@ -22,6 +22,8 @@ export const ARScene = () => {
     const pointPreviewRef = useRef<THREE.Mesh>(null!)
 
     const [pointArray, setPointArray] = useState<PointObject[]>([])
+    const [positions, setPositions] = useState<number[][]>([[]])
+
     const [dirty, setDirty] = useState(false)
 
     const [sessionEnd, setSessionEnd] = useState(false)
@@ -66,6 +68,7 @@ export const ARScene = () => {
                 key: `<floor>-${floorUUID}`,
                 name: `<floor>-${floorUUID.split("-")[0]}`,
                 points: pointArray,
+                positions: positions.flat(),
             },
         }
 
@@ -77,20 +80,35 @@ export const ARScene = () => {
             handleSaveFail
         )
     }
-    const handleSaveSuccess = () => {}
-    const handleSaveFail = () => {}
+    const handleSaveSuccess = () => {
+        alert("Save successfully!")
+        navigate(-1)
+    }
+    const handleSaveFail = () => {
+        alert("Save failed!")
+        navigate(0)
+    }
 
     const handleAddPoint = () => {
         const uuid = generateUUID()
+
+        const pos = {
+            x: parseFloat(pointPreviewRef.current.position.x.toFixed(3)),
+            y: parseFloat(pointPreviewRef.current.position.y.toFixed(3)),
+            z: parseFloat(pointPreviewRef.current.position.z.toFixed(3)),
+        }
+
         setPointArray([
             ...pointArray,
             {
-                x: pointPreviewRef.current.position.x,
-                y: pointPreviewRef.current.position.y,
-                z: pointPreviewRef.current.position.z,
+                x: pos.x,
+                y: pos.y,
+                z: pos.z,
                 key: `<point>-${uuid}`,
             },
         ])
+
+        setPositions([...positions, [pos.x, 0.05, pos.z]])
         setDirty(!dirty)
     }
 
@@ -138,15 +156,15 @@ export const ARScene = () => {
                                                 </CoordinateTable.Column>
 
                                                 <CoordinateTable.Column>
-                                                    {item.x.toFixed(3)}
+                                                    {item.x}
                                                 </CoordinateTable.Column>
 
                                                 <CoordinateTable.Column>
-                                                    {item.y.toFixed(3)}
+                                                    {item.y}
                                                 </CoordinateTable.Column>
 
                                                 <CoordinateTable.Column>
-                                                    {item.z.toFixed(3)}
+                                                    {item.z}
                                                 </CoordinateTable.Column>
                                             </CoordinateTable.Row>
                                         ))}

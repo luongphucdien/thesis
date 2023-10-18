@@ -18,6 +18,7 @@ export interface FloorObject extends FPObject {
 
 export interface FloorBufferObject extends Omit<FPObject, "position"> {
     points: PointObject[]
+    positions: number[]
 }
 
 export interface ProjectObjects {

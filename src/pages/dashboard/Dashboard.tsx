@@ -10,7 +10,6 @@ import { Button } from "../../components/button"
 import { Modal } from "../../components/modal"
 import { Slot } from "../../components/slot"
 import { ProjectObjects } from "../../core/ObjectInterface"
-import { timeout } from "../../util/misc"
 import { useDisclosure } from "../../util/useDisclosure"
 
 export const Dashboard = () => {
@@ -73,10 +72,12 @@ export const Dashboard = () => {
         deleteModalDisclosure.onOpen()
     }
     const handleDeleteProject = async (name: string) => {
-        deleteProject(name, cookies.userUID)
-        deleteModalDisclosure.onClose()
-        await timeout(0.5)
-        nav(0)
+        deleteProject(name, cookies.userUID).then(() => {
+            deleteModalDisclosure.onClose()
+            nav(0)
+        })
+        // deleteModalDisclosure.onClose()
+        // await timeout(1)
     }
 
     return (
