@@ -9,7 +9,8 @@ import { deleteProject, fetchProjects } from "../../api"
 import { Button } from "../../components/button"
 import { Modal } from "../../components/modal"
 import { Slot } from "../../components/slot"
-import { ProjectObjects } from "../../core/editor/Editor"
+import { ProjectObjects } from "../../core/ObjectInterface"
+import { timeout } from "../../util/misc"
 import { useDisclosure } from "../../util/useDisclosure"
 
 export const Dashboard = () => {
@@ -71,16 +72,17 @@ export const Dashboard = () => {
         setProjToBeDeleted(name)
         deleteModalDisclosure.onOpen()
     }
-    const handleDeleteProject = (name: string) => {
+    const handleDeleteProject = async (name: string) => {
         deleteProject(name, cookies.userUID)
         deleteModalDisclosure.onClose()
+        await timeout(0.5)
         nav(0)
     }
 
     return (
         <div className="flex h-full">
             <div
-                className={`absolute h-full w-60 sm:static sm:w-72 ${
+                className={`absolute z-[999] h-full w-60 sm:static sm:w-72 ${
                     collapsibleDisclosure.isOpen ? "left-0" : "-left-60"
                 }`}
             >
@@ -122,7 +124,7 @@ export const Dashboard = () => {
 
             <div className="h-full flex-1 p-5 sm:px-10">
                 <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-4 sm:gap-x-20">
-                    <Link to="/project/new" className="hidden sm:block">
+                    {/* <Link to="/project/new" className="hidden sm:block">
                         <Slot>
                             <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-2xl border-8 border-dashed text-gray-400">
                                 <span>
@@ -135,9 +137,9 @@ export const Dashboard = () => {
                                 Add Floor Plan
                             </div>
                         </Slot>
-                    </Link>
+                    </Link> */}
 
-                    <Link to="/ar" className="sm:hidden">
+                    <Link to="/ar">
                         <Slot>
                             <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-2xl border-8 border-dashed text-gray-400">
                                 <span>
@@ -157,7 +159,7 @@ export const Dashboard = () => {
                             <Link to={`/project/${proj.name}`}>
                                 <Slot>
                                     <div className="flex h-full flex-col items-center justify-center rounded-2xl border-8 text-gray-600">
-                                        <p className="text-2xl font-bold">
+                                        <p className="text-md font-semibold sm:text-2xl sm:font-bold">
                                             {proj.name}
                                         </p>
                                     </div>

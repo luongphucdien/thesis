@@ -1,13 +1,5 @@
 import { Canvas } from "@react-three/fiber"
-import {
-    ARButton,
-    Controllers,
-    Interactive,
-    XR,
-    XREvent,
-    XRManagerEvent,
-    useHitTest,
-} from "@react-three/xr"
+import { ARButton, Controllers, XR, useHitTest } from "@react-three/xr"
 import { useRef, useState } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
@@ -18,11 +10,8 @@ import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { CoordinateTable } from "../../components/coordinate-table"
 import { TextField } from "../../components/text-field"
-import { Marker } from "./Marker"
-
-interface MarkerObj {
-    position: THREE.Vector3
-}
+import { PointObject, ProjectObjects } from "../ObjectInterface"
+import { Point } from "./Point"
 
 export const ARScene = () => {
     const [cookies] = useCookies(["userUID"])
@@ -30,10 +19,9 @@ export const ARScene = () => {
 
     const [isARMode, setIsARMode] = useState(false)
 
-    const markerRef = useRef<THREE.Mesh>(null!)
-    const [markerColor, setMarkerColor] = useState<any>("blue")
+    const pointPreviewRef = useRef<THREE.Mesh>(null!)
 
-    const [markers, setMarkers] = useState<React.ReactElement[]>([])
+    const [pointArray, setPointArray] = useState<PointObject[]>([])
     const [dirty, setDirty] = useState(false)
 
     const [sessionEnd, setSessionEnd] = useState(false)
@@ -41,46 +29,27 @@ export const ARScene = () => {
     const MarkerPreview = () => {
         useHitTest((hitMatrix: THREE.Matrix4) => {
             hitMatrix.decompose(
-                markerRef.current.position,
-                markerRef.current.quaternion,
-                markerRef.current.scale
+                pointPreviewRef.current.position,
+                pointPreviewRef.current.quaternion,
+                pointPreviewRef.current.scale
             )
         })
 
-        const handleOnSelect = () => {
-            setMarkerColor((Math.random() * 0xffffff) | 0)
-            markerArray.current.push({ position: markerRef.current.position })
-
-            const uuid = generateUUID()
-            setMarkers((markers) => [
-                ...markers,
-                <Marker
-                    key={uuid}
-                    name=""
-                    position={markerRef.current.position}
-                />,
-            ])
-            setDirty(!dirty)
-        }
-
         return (
-            <Interactive onSelect={handleOnSelect}>
-                <mesh ref={markerRef} receiveShadow castShadow>
-                    <boxGeometry args={[0.1, 0.1, 0.1]} />
-                    <meshStandardMaterial color={markerColor} />
-                </mesh>
-            </Interactive>
+            <mesh ref={pointPreviewRef} receiveShadow castShadow>
+                <boxGeometry args={[0.1, 0.1, 0.1]} />
+                <meshStandardMaterial />
+            </mesh>
         )
     }
 
-    const markerArray = useRef<MarkerObj[]>([])
     const [show, setShow] = useState(false)
 
-    const onSessionStart = (event: XREvent<XRManagerEvent>) => {
-        markerArray.current = []
+    const onSessionStart = () => {
         setIsARMode(true)
         setShow(false)
     }
+
     const onSessionEnd = () => {
         setIsARMode(false)
         setShow(true)
@@ -89,8 +58,46 @@ export const ARScene = () => {
 
     const navigate = useNavigate()
 
+    const handleSave = () => {
+        const floorUUID = generateUUID()
+        const thisProjObjects: ProjectObjects = {
+            name: projName,
+            floorBuffer: {
+                key: `<floor>-${floorUUID}`,
+                name: `<floor>-${floorUUID.split("-")[0]}`,
+                points: pointArray,
+            },
+        }
+
+        saveProject(
+            cookies.userUID,
+            thisProjObjects,
+            projName,
+            handleSaveSuccess,
+            handleSaveFail
+        )
+    }
     const handleSaveSuccess = () => {}
     const handleSaveFail = () => {}
+
+    const handleAddPoint = () => {
+        const uuid = generateUUID()
+        setPointArray([
+            ...pointArray,
+            {
+                x: pointPreviewRef.current.position.x,
+                y: pointPreviewRef.current.position.y,
+                z: pointPreviewRef.current.position.z,
+                key: `<point>-${uuid}`,
+            },
+        ])
+        setDirty(!dirty)
+    }
+
+    const handleRemovePoint = () => {
+        setPointArray(pointArray.slice(0, -1))
+        setDirty(!dirty)
+    }
 
     return (
         <div
@@ -119,38 +126,30 @@ export const ARScene = () => {
                                 Markers&apos; Results
                             </p>
 
-                            {markerArray.current.length ? (
+                            {pointArray.length ? (
                                 <>
                                     <CoordinateTable>
-                                        {markerArray.current.map(
-                                            (item, idx) => (
-                                                <CoordinateTable.Row
-                                                    key={`row-${idx}`}
-                                                >
-                                                    <CoordinateTable.Column>
-                                                        Marker {idx + 1}
-                                                    </CoordinateTable.Column>
+                                        {pointArray.map((item, idx) => (
+                                            <CoordinateTable.Row
+                                                key={`row-${idx}`}
+                                            >
+                                                <CoordinateTable.Column>
+                                                    Point {idx + 1}
+                                                </CoordinateTable.Column>
 
-                                                    <CoordinateTable.Column>
-                                                        {item.position.x.toFixed(
-                                                            3
-                                                        )}
-                                                    </CoordinateTable.Column>
+                                                <CoordinateTable.Column>
+                                                    {item.x.toFixed(3)}
+                                                </CoordinateTable.Column>
 
-                                                    <CoordinateTable.Column>
-                                                        {item.position.y.toFixed(
-                                                            3
-                                                        )}
-                                                    </CoordinateTable.Column>
+                                                <CoordinateTable.Column>
+                                                    {item.y.toFixed(3)}
+                                                </CoordinateTable.Column>
 
-                                                    <CoordinateTable.Column>
-                                                        {item.position.z.toFixed(
-                                                            3
-                                                        )}
-                                                    </CoordinateTable.Column>
-                                                </CoordinateTable.Row>
-                                            )
-                                        )}
+                                                <CoordinateTable.Column>
+                                                    {item.z.toFixed(3)}
+                                                </CoordinateTable.Column>
+                                            </CoordinateTable.Row>
+                                        ))}
                                     </CoordinateTable>
 
                                     <div className="flex flex-col items-center gap-4">
@@ -176,18 +175,7 @@ export const ARScene = () => {
                                             </Button>
 
                                             <Button
-                                                onClick={() =>
-                                                    saveProject(
-                                                        cookies.userUID,
-                                                        {
-                                                            markers:
-                                                                markerArray,
-                                                        },
-                                                        projName,
-                                                        handleSaveSuccess,
-                                                        handleSaveFail
-                                                    )
-                                                }
+                                                onClick={handleSave}
                                                 disabled={projName === ""}
                                             >
                                                 Yes!
@@ -229,6 +217,18 @@ export const ARScene = () => {
             {!sessionEnd && <ARButton />}
 
             <div className="h-full w-full">
+                {isARMode && (
+                    <span className="absolute bottom-20 z-[999] flex h-14 w-full flex-row-reverse gap-4 px-4">
+                        <Button variant="primary" onClick={handleAddPoint}>
+                            Add
+                        </Button>
+
+                        <Button variant="error" onClick={handleRemovePoint}>
+                            Remove
+                        </Button>
+                    </span>
+                )}
+
                 <Canvas>
                     <XR
                         referenceSpace="local"
@@ -249,8 +249,13 @@ export const ARScene = () => {
                                     <boxGeometry args={[0.1, 0.1, 0.1]} />
                                 </mesh>
 
-                                {markers.map((m) => (
-                                    <>{m}</>
+                                {pointArray.map((p) => (
+                                    <Point
+                                        key={p.key}
+                                        x={p.x}
+                                        y={p.y}
+                                        z={p.z}
+                                    />
                                 ))}
                             </>
                         )}
