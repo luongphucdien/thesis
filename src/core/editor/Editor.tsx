@@ -21,24 +21,9 @@ import { generateUUID } from "three/src/math/MathUtils.js"
 import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { useDisclosure } from "../../util/useDisclosure"
+import { FloorObject, ProjectObjects } from "../ObjectInterface"
 import { Floor } from "./Floor"
 import { ModeType } from "./ModeType"
-
-interface FPObject {
-    position: [x: number, y: number, z: number]
-    key: string
-    name: string
-}
-
-interface FloorObject extends FPObject {
-    width: number
-    length: number
-}
-
-export interface ProjectObjects {
-    name: string
-    floors: FloorObject[]
-}
 
 export const Editor = () => {
     const params = useParams()
@@ -74,7 +59,7 @@ export const Editor = () => {
     useEffect(() => {
         projects.forEach((item) => {
             if (item.name === params.name) {
-                setFloorArray(item.floors)
+                setFloorArray(item.floors!)
             }
         })
         document.title = params.name!
@@ -469,8 +454,8 @@ export const Editor = () => {
                             key={m.key}
                             name={m.name}
                             position={m.position}
-                            width={m.width}
-                            length={m.length}
+                            width={m.width!}
+                            length={m.length!}
                         />
                     ))}
                 </group>
