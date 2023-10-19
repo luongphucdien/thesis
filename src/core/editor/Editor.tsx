@@ -22,7 +22,6 @@ import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { useDisclosure } from "../../util/useDisclosure"
 import { FloorObject, PointObject, ProjectObjects } from "../ObjectInterface"
-import { Floor } from "./Floor"
 import { ModeType } from "./ModeType"
 
 export const Editor = () => {
@@ -47,7 +46,7 @@ export const Editor = () => {
 
     const [floorArray, setFloorArray] = useState<FloorObject[]>([])
 
-    const [floorPoints, setFloorPoints] = useState<PointObject[]>([])
+    const [roomVertices, setRoomVertices] = useState<PointObject[]>([])
     // const planeBufferRef = useRef<
     const [positions, setPositions] = useState<number[]>([])
     const [indices, setIndices] = useState<number[][]>([[]])
@@ -65,8 +64,8 @@ export const Editor = () => {
         projects.forEach((item) => {
             if (item.name === params.name) {
                 setFloorArray(item.floors ? item.floors : [])
-                setFloorPoints(item.floorBuffer!.points)
-                setPositions(item.floorBuffer!.positions)
+                setPositions(item.room!.positions)
+                setRoomVertices(item.floorBuffer!.points)
             }
         })
         document.title = params.name!
@@ -459,7 +458,7 @@ export const Editor = () => {
                     <boxGeometry />
                 </mesh>
 
-                <group>
+                {/* <group>
                     {floorArray.length > 0 &&
                         floorArray.map((m) => (
                             <Floor
@@ -470,14 +469,14 @@ export const Editor = () => {
                                 length={m.length!}
                             />
                         ))}
-                </group>
+                </group> */}
 
                 <group>
-                    {floorPoints.length > 0 &&
-                        floorPoints.map((p) => (
+                    {roomVertices.length > 0 &&
+                        roomVertices.map((v, idx) => (
                             <mesh
-                                key={p.key}
-                                position={new Vector3(p.x, 0.05, p.z)}
+                                key={""}
+                                position={new Vector3(v.x, v.y + 1.0, v.z)}
                             >
                                 <sphereGeometry args={[0.03]} />
                                 <meshBasicMaterial color={"red"} />
@@ -498,13 +497,15 @@ export const Editor = () => {
                             <bufferAttribute
                                 attach={"index"}
                                 array={
-                                    new Uint16Array([0, 1, 2, 1, 2, 3, 2, 3, 0])
+                                    new Uint16Array([
+                                        0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 0,
+                                    ])
                                 }
-                                count={9}
+                                count={12}
                                 itemSize={1}
                             />
                         </bufferGeometry>
-                        <meshBasicMaterial color={"blue"} side={DoubleSide} />
+                        <meshBasicMaterial color={"blue"} side={1} />
                     </mesh>
                 </group>
 

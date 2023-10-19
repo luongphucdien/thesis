@@ -13,6 +13,14 @@ import { TextField } from "../../components/text-field"
 import { PointObject, ProjectObjects } from "../ObjectInterface"
 import { Point } from "./Point"
 
+enum RoomAttributes {
+    firstEdge,
+    secondEdge,
+    height,
+    door,
+    window,
+}
+
 export const ARScene = () => {
     const [cookies] = useCookies(["userUID"])
     const [projName, setProjName] = useState("")
@@ -23,6 +31,10 @@ export const ARScene = () => {
 
     const [pointArray, setPointArray] = useState<PointObject[]>([])
     const [positions, setPositions] = useState<number[][]>([[]])
+
+    const [roomAttribute, setRoomAttribute] = useState<RoomAttributes>(
+        RoomAttributes.firstEdge
+    )
 
     const [dirty, setDirty] = useState(false)
 
@@ -39,8 +51,10 @@ export const ARScene = () => {
 
         return (
             <mesh ref={pointPreviewRef} receiveShadow castShadow>
-                <boxGeometry args={[0.1, 0.1, 0.1]} />
-                <meshStandardMaterial />
+                <mesh position={[0, 0.25, 0]}>
+                    <cylinderGeometry args={[0.02, 0.02, 0.5]} />
+                    <meshStandardMaterial color={"green"} opacity={0.01} />
+                </mesh>
             </mesh>
         )
     }
@@ -68,6 +82,10 @@ export const ARScene = () => {
                 key: `<floor>-${floorUUID}`,
                 name: `<floor>-${floorUUID.split("-")[0]}`,
                 points: pointArray,
+                positions: positions.flat(),
+            },
+            room: {
+                height: 0,
                 positions: positions.flat(),
             },
         }
@@ -108,7 +126,7 @@ export const ARScene = () => {
             },
         ])
 
-        setPositions([...positions, [pos.x, 0.05, pos.z]])
+        setPositions([...positions, [pos.x, pos.y + 1.0, pos.z]])
         setDirty(!dirty)
     }
 
@@ -143,6 +161,8 @@ export const ARScene = () => {
                             <p className="text-xl font-semibold">
                                 Markers&apos; Results
                             </p>
+
+                            <p className="text-neutral-800">{roomAttribute}</p>
 
                             {pointArray.length ? (
                                 <>
@@ -224,15 +244,45 @@ export const ARScene = () => {
                         </>
                     )}
 
-                    <p className="text-center italic sm:hidden">
+                    {/* <p className="text-center italic sm:hidden">
                         Editor is currently unavailable for mobile, please
                         access it from your PC or from a device with larger
                         screen.
-                    </p>
+                    </p> */}
+
+                    <div className="flex flex-col gap-2">
+                        <label htmlFor="room-attr" className="text-base">
+                            Select room attribute
+                        </label>
+
+                        <select
+                            id="room-attr"
+                            className="rounded-lg bg-indigo-600 p-2 text-neutral-100 transition-all hover:bg-indigo-500"
+                            onChange={(e) => {
+                                setRoomAttribute(
+                                    parseInt(e.target.value) as RoomAttributes
+                                )
+                            }}
+                        >
+                            <option value={RoomAttributes.firstEdge}>
+                                1st Edge
+                            </option>
+                            <option value={RoomAttributes.secondEdge}>
+                                2nd Edge
+                            </option>
+                            <option value={RoomAttributes.height}>
+                                Height
+                            </option>
+                            <option value={RoomAttributes.door}>Door</option>
+                            <option value={RoomAttributes.window}>
+                                Window
+                            </option>
+                        </select>
+                    </div>
                 </div>
             )}
 
-            {!sessionEnd && <ARButton />}
+            <ARButton />
 
             <div className="h-full w-full">
                 {isARMode && (
