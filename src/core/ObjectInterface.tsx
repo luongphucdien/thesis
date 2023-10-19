@@ -21,8 +21,27 @@ export interface FloorBufferObject extends Omit<FPObject, "position"> {
     positions: number[]
 }
 
+interface OnWallObject {
+    positions: number[]
+    width?: number
+    height?: number
+}
+
+export interface DoorObject extends OnWallObject {}
+export interface WindowObject extends OnWallObject {}
+
+interface RoomObject {
+    positions: number[]
+    firstEdge?: number
+    secondEdge?: number
+    height?: number
+    doors?: DoorObject[]
+    windows?: WindowObject[]
+}
+
 export interface ProjectObjects {
     name: string
     floors?: FloorObject[]
     floorBuffer?: FloorBufferObject
+    room?: RoomObject
 }
