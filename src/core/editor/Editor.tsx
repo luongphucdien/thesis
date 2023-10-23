@@ -64,7 +64,7 @@ export const Editor = () => {
         projects.forEach((item) => {
             if (item.name === params.name) {
                 setFloorArray(item.floors ? item.floors : [])
-                setPositions(item.room!.positions)
+                // setPositions(item.room!.positions)
                 setRoomVertices(item.floorBuffer!.points)
             }
         })

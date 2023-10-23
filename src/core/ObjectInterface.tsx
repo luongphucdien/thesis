@@ -31,12 +31,7 @@ export interface DoorObject extends OnWallObject {}
 export interface WindowObject extends OnWallObject {}
 
 interface RoomObject {
-    positions: number[]
-    firstEdge?: number
-    secondEdge?: number
-    height?: number
-    doors?: DoorObject[]
-    windows?: WindowObject[]
+    roomRoots: number[]
 }
 
 export interface ProjectObjects {
