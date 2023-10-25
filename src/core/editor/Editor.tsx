@@ -16,13 +16,20 @@ import {
 } from "react-icons/io"
 import { TbAugmentedReality } from "react-icons/tb"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { DoubleSide, Mesh, Raycaster, Vector2, Vector3 } from "three"
+import { Mesh, Raycaster, Vector2, Vector3 } from "three"
 import { generateUUID } from "three/src/math/MathUtils.js"
 import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { useDisclosure } from "../../util/useDisclosure"
-import { FloorObject, PointObject, ProjectObjects } from "../ObjectInterface"
+import { FloorObject, ProjectObjects } from "../ObjectInterface"
 import { ModeType } from "./ModeType"
+
+const Indices = {
+    SQUARE: [
+        0, 1, 2, 3, 2, 1, 1, 0, 4, 4, 5, 1, 3, 1, 7, 5, 7, 1, 2, 3, 7, 7, 6, 2,
+        0, 2, 6, 6, 4, 0,
+    ],
+}
 
 export const Editor = () => {
     const params = useParams()
@@ -46,9 +53,9 @@ export const Editor = () => {
 
     const [floorArray, setFloorArray] = useState<FloorObject[]>([])
 
-    const [roomVertices, setRoomVertices] = useState<PointObject[]>([])
+    // const [roomVertices, setRoomVertices] = useState<PointObject[]>([])
     // const planeBufferRef = useRef<
-    const [positions, setPositions] = useState<number[]>([])
+    const [roomPositions, setRoomPositions] = useState<number[]>([])
     const [indices, setIndices] = useState<number[][]>([[]])
 
     const [dirty, setDirty] = useState(false)
@@ -64,16 +71,11 @@ export const Editor = () => {
         projects.forEach((item) => {
             if (item.name === params.name) {
                 setFloorArray(item.floors ? item.floors : [])
-                // setPositions(item.room!.positions)
-                setRoomVertices(item.floorBuffer!.points)
+                setRoomPositions(item.room!.roomRoots)
             }
         })
         document.title = params.name!
     }, [])
-
-    // useEffect(() => {
-    //     positions.
-    // }, [positions])
 
     const CustomGrid = () => {
         const { camera, scene } = useThree()
@@ -426,11 +428,11 @@ export const Editor = () => {
 
             <SidePanel />
 
-            <Canvas camera={{ position: [0, 10, 0] }}>
-                <mesh rotation={[Math.PI * -0.5, 0, 0]} name="ground">
+            <Canvas camera={{ position: [3, 7, 3] }} shadows>
+                {/* <mesh rotation={[Math.PI * -0.5, 0, 0]} name="ground">
                     <planeGeometry args={[20, 20]} />
                     <meshBasicMaterial visible={false} />
-                </mesh>
+                </mesh> */}
 
                 {/* <mesh
                     position={[0.5, 0.02, 0.5]}
@@ -471,7 +473,7 @@ export const Editor = () => {
                         ))}
                 </group> */}
 
-                <group>
+                {/* <group>
                     {roomVertices.length > 0 &&
                         roomVertices.map((v, idx) => (
                             <mesh
@@ -482,35 +484,44 @@ export const Editor = () => {
                                 <meshBasicMaterial color={"red"} />
                             </mesh>
                         ))}
-                </group>
+                </group> */}
 
                 <group>
-                    <mesh>
-                        <bufferGeometry>
+                    <mesh receiveShadow>
+                        <bufferGeometry
+                            attach={"geometry"}
+                            onUpdate={(self) => self.computeVertexNormals()}
+                        >
                             <bufferAttribute
                                 attach={"attributes-position"}
-                                array={new Float32Array(positions)}
-                                count={new Float32Array(positions).length / 3}
+                                array={new Float32Array(roomPositions)}
+                                count={
+                                    new Float32Array(roomPositions).length / 3
+                                }
                                 itemSize={3}
                             />
 
                             <bufferAttribute
                                 attach={"index"}
-                                array={
-                                    new Uint16Array([
-                                        0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 0,
-                                    ])
-                                }
-                                count={12}
+                                array={new Uint16Array(Indices.SQUARE)}
+                                count={Indices.SQUARE.length}
                                 itemSize={1}
                             />
                         </bufferGeometry>
-                        <meshBasicMaterial color={"blue"} side={1} />
+
+                        <meshStandardMaterial
+                            side={1}
+                            attach={"material"}
+                            roughness={0.5}
+                        />
                     </mesh>
                 </group>
 
                 <MapControls />
-                <CustomGrid />
+                {/* <CustomGrid /> */}
+
+                <ambientLight intensity={1} color={"rgb(79,70,229)"} />
+                <pointLight position={[0, 4, 0]} intensity={1} />
             </Canvas>
         </div>
     )
