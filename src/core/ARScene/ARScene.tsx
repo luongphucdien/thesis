@@ -40,6 +40,13 @@ export const ARScene = () => {
     const [localRoomPos, setLocalRoomPos] = useLocalStorage("roomPositions", [
         [0],
     ])
+    const [localDoorPos, setLocalDoorPos] = useLocalStorage("doorPositions", [
+        [0],
+    ])
+    const [localWindowPos, setLocalWindowPos] = useLocalStorage(
+        "windowPositions",
+        [[0]]
+    )
 
     const [roomAttribute, setRoomAttribute] = useState<RoomAttributes>(
         RoomAttributes.dimension
@@ -51,6 +58,8 @@ export const ARScene = () => {
 
     useEffect(() => {
         setLocalRoomPos([])
+        setLocalDoorPos([])
+        setLocalWindowPos([])
     }, [])
 
     const MarkerPreview = () => {
@@ -146,6 +155,15 @@ export const ARScene = () => {
 
         tempRoomRoots.push(...roofPoints)
 
+        const tempDoorRoots = localDoorPos.map((d, i) => {
+            if (i % 4 < 2) return { x: d[0], y: 1, z: d[2] }
+            else return { x: d[0], y: d[1], z: d[2] }
+        })
+
+        const doorHeights = tempDoorRoots.map((d, i) => {
+            if ((i + 1) % 2 === 3) return Math.abs(1 - d.y)
+        })
+
         const thisProjObjects: ProjectObjects = {
             name: projName,
             room: {
@@ -194,6 +212,16 @@ export const ARScene = () => {
                 ...localRoomPos,
                 [pos.x, parseFloat((pos.y + 1.0).toFixed(3)), pos.z],
             ])
+        } else if (roomAttribute === RoomAttributes.door) {
+            setLocalDoorPos([
+                ...localDoorPos,
+                [pos.x, parseFloat((pos.y + 1.0).toFixed(3)), pos.z],
+            ])
+        } else if (roomAttribute === RoomAttributes.window) {
+            setLocalWindowPos([
+                ...localWindowPos,
+                [pos.x, parseFloat((pos.y + 1.0).toFixed(3)), pos.z],
+            ])
         }
 
         setDirty(!dirty)
@@ -213,6 +241,8 @@ export const ARScene = () => {
             [2, 2, -2],
             [2, 5, 2],
         ])
+
+        // add doorPos and windowPos
     }
 
     return (
@@ -242,10 +272,9 @@ export const ARScene = () => {
                                 Markers&apos; Results
                             </p>
 
-                            <p className="text-neutral-800">{roomAttribute}</p>
-
                             {localRoomPos ? (
                                 <>
+                                    <p>Room positions</p>
                                     <CoordinateTable>
                                         {localRoomPos.map((item, idx) => (
                                             <CoordinateTable.Row
@@ -269,6 +298,64 @@ export const ARScene = () => {
                                             </CoordinateTable.Row>
                                         ))}
                                     </CoordinateTable>
+
+                                    {localDoorPos.length > 0 && (
+                                        <>
+                                            <p>Door positions</p>
+                                            <CoordinateTable>
+                                                {localDoorPos.map((d, i) => (
+                                                    <CoordinateTable.Row
+                                                        key={`door-row-${i}`}
+                                                    >
+                                                        <CoordinateTable.Column>
+                                                            Position {i}
+                                                        </CoordinateTable.Column>
+
+                                                        <CoordinateTable.Column>
+                                                            {d[0]}
+                                                        </CoordinateTable.Column>
+
+                                                        <CoordinateTable.Column>
+                                                            {d[1]}
+                                                        </CoordinateTable.Column>
+
+                                                        <CoordinateTable.Column>
+                                                            {d[2]}
+                                                        </CoordinateTable.Column>
+                                                    </CoordinateTable.Row>
+                                                ))}
+                                            </CoordinateTable>
+                                        </>
+                                    )}
+
+                                    {localWindowPos.length > 0 && (
+                                        <>
+                                            <p>Window positions</p>
+                                            <CoordinateTable>
+                                                {localWindowPos.map((d, i) => (
+                                                    <CoordinateTable.Row
+                                                        key={`door-row-${i}`}
+                                                    >
+                                                        <CoordinateTable.Column>
+                                                            Position {i}
+                                                        </CoordinateTable.Column>
+
+                                                        <CoordinateTable.Column>
+                                                            {d[0]}
+                                                        </CoordinateTable.Column>
+
+                                                        <CoordinateTable.Column>
+                                                            {d[1]}
+                                                        </CoordinateTable.Column>
+
+                                                        <CoordinateTable.Column>
+                                                            {d[2]}
+                                                        </CoordinateTable.Column>
+                                                    </CoordinateTable.Row>
+                                                ))}
+                                            </CoordinateTable>
+                                        </>
+                                    )}
 
                                     <div className="flex flex-col items-center gap-4">
                                         <p className="text-center text-xs">
