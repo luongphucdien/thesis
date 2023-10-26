@@ -29,6 +29,10 @@ const Indices = {
         0, 1, 2, 3, 2, 1, 1, 0, 4, 4, 5, 1, 3, 1, 7, 5, 7, 1, 2, 3, 7, 7, 6, 2,
         0, 2, 6, 6, 4, 0,
     ],
+    SQUARE2: [
+        0, 1, 2, 2, 3, 0, 0, 4, 5, 5, 1, 0, 1, 5, 6, 6, 2, 1, 2, 6, 7, 7, 3, 2,
+        3, 7, 4, 4, 0, 3,
+    ],
 }
 
 export const Editor = () => {
@@ -503,8 +507,8 @@ export const Editor = () => {
 
                             <bufferAttribute
                                 attach={"index"}
-                                array={new Uint16Array(Indices.SQUARE)}
-                                count={Indices.SQUARE.length}
+                                array={new Uint16Array(Indices.SQUARE2)}
+                                count={Indices.SQUARE2.length}
                                 itemSize={1}
                             />
                         </bufferGeometry>

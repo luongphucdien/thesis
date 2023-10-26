@@ -17,8 +17,10 @@ import {
     distance,
     findPointMinDistance,
     flatten,
+    groupRoots,
     normalizedD,
     perpPoints,
+    projectToRoomEdge,
 } from "./geometryUtils"
 
 enum RoomAttributes {
@@ -137,12 +139,12 @@ export const ARScene = () => {
             roomLength
         )
 
-        const C = findPointMinDistance(perpPointsA, {
+        const D = findPointMinDistance(perpPointsA, {
             x: innerPoint.x,
             y: innerPoint.z,
         })
 
-        const D = findPointMinDistance(perpPointsB, {
+        const C = findPointMinDistance(perpPointsB, {
             x: innerPoint.x,
             y: innerPoint.z,
         })
@@ -155,19 +157,74 @@ export const ARScene = () => {
 
         tempRoomRoots.push(...roofPoints)
 
+        // ============================ //
+
         const tempDoorRoots = localDoorPos.map((d, i) => {
             if (i % 4 < 2) return { x: d[0], y: 1, z: d[2] }
-            else return { x: d[0], y: d[1], z: d[2] }
+            else return
         })
 
-        const doorHeights = tempDoorRoots.map((d, i) => {
-            if ((i + 1) % 2 === 3) return Math.abs(1 - d.y)
+        const filteredDoorRoots = tempDoorRoots.filter((item) => {
+            return item !== undefined
         })
+
+        const doorHeights = localDoorPos.map((d, i) => {
+            if (i % 4 === 2) {
+                return parseFloat(
+                    Math.abs(
+                        localDoorPos[i][1] - localDoorPos[i - 1][1]
+                    ).toFixed(3)
+                )
+            }
+        })
+
+        const filteredDoorHeight = doorHeights.filter((i) => {
+            return i !== undefined
+        })
+
+        const fixedDoorRoots = projectToRoomEdge(
+            tempRoomRoots.slice(0, 4),
+            filteredDoorRoots as { x: number; y: number; z: number }[]
+        )
+
+        tempDoorRoots.splice(0)
+
+        filteredDoorHeight.forEach((dh, ih) => {
+            tempDoorRoots.push(
+                {
+                    x: fixedDoorRoots[2 * ih + 0].x,
+                    y: 1,
+                    z: fixedDoorRoots[2 * ih + 0].y,
+                },
+                {
+                    x: fixedDoorRoots[2 * ih + 1].x,
+                    y: 1,
+                    z: fixedDoorRoots[2 * ih + 1].y,
+                },
+                {
+                    x: fixedDoorRoots[2 * ih + 1].x,
+                    y: 1 + (dh as number),
+                    z: fixedDoorRoots[2 * ih + 1].y,
+                },
+                {
+                    x: fixedDoorRoots[2 * ih + 0].x,
+                    y: 1 + (dh as number),
+                    z: fixedDoorRoots[2 * ih + 0].y,
+                }
+            )
+        })
+
+        const flattenDoorRoots = flatten(
+            tempDoorRoots as { x: number; y: number; z: number }[]
+        )
+
+        // =============================== //
 
         const thisProjObjects: ProjectObjects = {
             name: projName,
             room: {
                 roomRoots: flatten(tempRoomRoots),
+                doorRoots: groupRoots(flattenDoorRoots),
             },
         }
 
@@ -242,7 +299,14 @@ export const ARScene = () => {
             [2, 5, 2],
         ])
 
-        // add doorPos and windowPos
+        setLocalDoorPos([
+            [1.75, 2, -1.95],
+            [0.12, 2, -1.8],
+            [1.72, 4, -1.93],
+            [0.15, 4, -1.83],
+        ])
+
+        // add windowPos
     }
 
     return (
