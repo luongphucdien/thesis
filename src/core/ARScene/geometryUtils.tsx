@@ -33,7 +33,7 @@ const dotProduct = (
     return firstPoint.x * secondPoint.x + firstPoint.y * secondPoint.y
 }
 
-export const projection = (
+const projection = (
     A: {
         x: number
         y: number
@@ -89,4 +89,59 @@ export const flatten = (points: { x: number; y: number; z: number }[]) => {
             return [p.x, p.y, p.z]
         })
         .flat()
+}
+
+const distanceToLine = (
+    line: {
+        A: { x: number; y: number }
+        B: { x: number; y: number }
+    },
+    point: { x: number; y: number }
+) => {
+    const proj = projection(line.A, line.B, point)
+    return distance(point, proj)
+}
+
+export const projectToRoomEdge = (
+    roomBottomRoots: { x: number; y: number; z: number }[],
+    pointsToProject: { x: number; y: number; z: number }[]
+) => {
+    return pointsToProject.map((p) => {
+        const distances = roomBottomRoots.map((r, ir) => {
+            const A = { x: roomBottomRoots[ir].x, y: roomBottomRoots[ir].z }
+            const B = {
+                x: roomBottomRoots[(ir + 1) % roomBottomRoots.length].x,
+                y: roomBottomRoots[(ir + 1) % roomBottomRoots.length].z,
+            }
+
+            return {
+                A: A,
+                B: B,
+                dist: distanceToLine(
+                    {
+                        A: A,
+                        B: B,
+                    },
+                    { x: p.x, y: p.z }
+                ),
+            }
+        })
+
+        const nearestEdge = distances.reduce((prev, curr) =>
+            prev.dist < curr.dist ? prev : curr
+        )
+
+        return projection(nearestEdge.A, nearestEdge.B, { x: p.x, y: p.z })
+    })
+}
+
+export const groupRoots = (
+    flattenRoots: number[],
+    rootsEachGroup: number = 4
+) => {
+    const arrayClone = flattenRoots
+    const result = []
+    while (arrayClone.length > 0)
+        result.push(arrayClone.splice(0, rootsEachGroup * 3))
+    return result
 }

@@ -32,6 +32,7 @@ export interface WindowObject extends OnWallObject {}
 
 interface RoomObject {
     roomRoots: number[]
+    doorRoots: number[][]
 }
 
 export interface ProjectObjects {
