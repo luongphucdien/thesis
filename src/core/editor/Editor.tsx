@@ -1,3 +1,4 @@
+import { Base, Geometry } from "@react-three/csg"
 import { MapControls } from "@react-three/drei"
 import { Canvas, ThreeEvent, useThree } from "@react-three/fiber"
 import { useLocalStorage } from "@uidotdev/usehooks"
@@ -33,6 +34,7 @@ const Indices = {
         0, 1, 2, 2, 3, 0, 0, 4, 5, 5, 1, 0, 1, 5, 6, 6, 2, 1, 2, 6, 7, 7, 3, 2,
         3, 7, 4, 4, 0, 3,
     ],
+    DOOR: [0, 1, 2, 2, 3, 0],
 }
 
 export const Editor = () => {
@@ -57,16 +59,13 @@ export const Editor = () => {
 
     const [floorArray, setFloorArray] = useState<FloorObject[]>([])
 
-    // const [roomVertices, setRoomVertices] = useState<PointObject[]>([])
-    // const planeBufferRef = useRef<
     const [roomPositions, setRoomPositions] = useState<number[]>([])
-    const [indices, setIndices] = useState<number[][]>([[]])
+    const [doorPositions, setDoorPositions] = useState<number[][]>([])
 
     const [dirty, setDirty] = useState(false)
 
     const [projects, _] = useLocalStorage<ProjectObjects[]>("projects", [
         {
-            floors: [],
             name: "",
         },
     ])
@@ -76,6 +75,7 @@ export const Editor = () => {
             if (item.name === params.name) {
                 setFloorArray(item.floors ? item.floors : [])
                 setRoomPositions(item.room!.roomRoots)
+                setDoorPositions(item.room!.doorRoots)
             }
         })
         document.title = params.name!
@@ -492,37 +492,81 @@ export const Editor = () => {
 
                 <group>
                     <mesh receiveShadow>
-                        <bufferGeometry
-                            attach={"geometry"}
-                            onUpdate={(self) => self.computeVertexNormals()}
-                        >
-                            <bufferAttribute
-                                attach={"attributes-position"}
-                                array={new Float32Array(roomPositions)}
-                                count={
-                                    new Float32Array(roomPositions).length / 3
-                                }
-                                itemSize={3}
-                            />
+                        <Geometry>
+                            <Base scale={[1, 1, 1]}>
+                                <bufferGeometry
+                                    attach={"geometry"}
+                                    onUpdate={(self) =>
+                                        self.computeVertexNormals()
+                                    }
+                                >
+                                    <bufferAttribute
+                                        attach={"attributes-position"}
+                                        array={new Float32Array(roomPositions)}
+                                        count={
+                                            new Float32Array(roomPositions)
+                                                .length / 3
+                                        }
+                                        itemSize={3}
+                                    />
 
-                            <bufferAttribute
-                                attach={"index"}
-                                array={new Uint16Array(Indices.SQUARE2)}
-                                count={Indices.SQUARE2.length}
-                                itemSize={1}
-                            />
-                        </bufferGeometry>
+                                    <bufferAttribute
+                                        attach={"index"}
+                                        array={new Uint16Array(Indices.SQUARE2)}
+                                        count={Indices.SQUARE2.length}
+                                        itemSize={1}
+                                    />
+                                </bufferGeometry>
+                            </Base>
 
-                        <meshStandardMaterial
+                            {/* <Addition scale={[1, 1, 1]} position={[0, 2, 0]}>
+                                <boxGeometry />
+                            </Addition> */}
+                        </Geometry>
+
+                        {/* <meshStandardMaterial
                             side={1}
                             attach={"material"}
                             roughness={0.5}
-                        />
+                        /> */}
+
+                        <meshNormalMaterial side={1} />
                     </mesh>
+
+                    {doorPositions.map((d, i) => (
+                        <mesh receiveShadow key={`door-${i}`}>
+                            <bufferGeometry
+                                attach={"geometry"}
+                                onUpdate={(self) => self.computeVertexNormals()}
+                            >
+                                <bufferAttribute
+                                    attach={"attributes-position"}
+                                    array={new Float32Array(d)}
+                                    count={new Float32Array(d).length / 3}
+                                    itemSize={3}
+                                />
+
+                                <bufferAttribute
+                                    attach={"index"}
+                                    array={new Uint16Array(Indices.DOOR)}
+                                    count={Indices.DOOR.length}
+                                    itemSize={1}
+                                />
+                            </bufferGeometry>
+
+                            <meshStandardMaterial
+                                side={1}
+                                attach={"material"}
+                                roughness={0.5}
+                                color={"red"}
+                            />
+                        </mesh>
+                    ))}
                 </group>
 
                 <MapControls />
                 {/* <CustomGrid /> */}
+                <axesHelper args={[100]} position={[0, 1, 0]} />
 
                 <ambientLight intensity={1} color={"rgb(79,70,229)"} />
                 <pointLight position={[0, 4, 0]} intensity={1} />
