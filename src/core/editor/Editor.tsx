@@ -1,4 +1,3 @@
-import { Base, Geometry } from "@react-three/csg"
 import { MapControls } from "@react-three/drei"
 import { Canvas, ThreeEvent, useThree } from "@react-three/fiber"
 import { useLocalStorage } from "@uidotdev/usehooks"
@@ -24,6 +23,8 @@ import { Button } from "../../components/button"
 import { useDisclosure } from "../../util/useDisclosure"
 import { FloorObject, ProjectObjects } from "../ObjectInterface"
 import { ModeType } from "./ModeType"
+import { Door } from "./Openings"
+import { Room } from "./Room"
 
 const Indices = {
     SQUARE: [
@@ -464,112 +465,19 @@ export const Editor = () => {
                     <boxGeometry />
                 </mesh>
 
-                {/* <group>
-                    {floorArray.length > 0 &&
-                        floorArray.map((m) => (
-                            <Floor
-                                key={m.key}
-                                name={m.name}
-                                position={m.position}
-                                width={m.width!}
-                                length={m.length!}
-                            />
-                        ))}
-                </group> */}
-
-                {/* <group>
-                    {roomVertices.length > 0 &&
-                        roomVertices.map((v, idx) => (
-                            <mesh
-                                key={""}
-                                position={new Vector3(v.x, v.y + 1.0, v.z)}
-                            >
-                                <sphereGeometry args={[0.03]} />
-                                <meshBasicMaterial color={"red"} />
-                            </mesh>
-                        ))}
-                </group> */}
-
                 <group>
-                    <mesh receiveShadow>
-                        <Geometry>
-                            <Base scale={[1, 1, 1]}>
-                                <bufferGeometry
-                                    attach={"geometry"}
-                                    onUpdate={(self) =>
-                                        self.computeVertexNormals()
-                                    }
-                                >
-                                    <bufferAttribute
-                                        attach={"attributes-position"}
-                                        array={new Float32Array(roomPositions)}
-                                        count={
-                                            new Float32Array(roomPositions)
-                                                .length / 3
-                                        }
-                                        itemSize={3}
-                                    />
-
-                                    <bufferAttribute
-                                        attach={"index"}
-                                        array={new Uint16Array(Indices.SQUARE2)}
-                                        count={Indices.SQUARE2.length}
-                                        itemSize={1}
-                                    />
-                                </bufferGeometry>
-                            </Base>
-
-                            {/* <Addition scale={[1, 1, 1]} position={[0, 2, 0]}>
-                                <boxGeometry />
-                            </Addition> */}
-                        </Geometry>
-
-                        {/* <meshStandardMaterial
-                            side={1}
-                            attach={"material"}
-                            roughness={0.5}
-                        /> */}
-
-                        <meshNormalMaterial side={1} />
-                    </mesh>
-
                     {doorPositions.map((d, i) => (
-                        <mesh receiveShadow key={`door-${i}`}>
-                            <bufferGeometry
-                                attach={"geometry"}
-                                onUpdate={(self) => self.computeVertexNormals()}
-                            >
-                                <bufferAttribute
-                                    attach={"attributes-position"}
-                                    array={new Float32Array(d)}
-                                    count={new Float32Array(d).length / 3}
-                                    itemSize={3}
-                                />
-
-                                <bufferAttribute
-                                    attach={"index"}
-                                    array={new Uint16Array(Indices.DOOR)}
-                                    count={Indices.DOOR.length}
-                                    itemSize={1}
-                                />
-                            </bufferGeometry>
-
-                            <meshStandardMaterial
-                                side={1}
-                                attach={"material"}
-                                roughness={0.5}
-                                color={"red"}
-                            />
-                        </mesh>
+                        <Door positions={d} groundY={1} key={`door-${i}`} />
                     ))}
+
+                    <Room positions={roomPositions} groundY={1} />
                 </group>
 
                 <MapControls />
                 {/* <CustomGrid /> */}
                 <axesHelper args={[100]} position={[0, 1, 0]} />
 
-                <ambientLight intensity={1} color={"rgb(79,70,229)"} />
-                <pointLight position={[0, 4, 0]} intensity={1} />
+                <ambientLight intensity={1} color={"white"} />
             </Canvas>
         </div>
     )

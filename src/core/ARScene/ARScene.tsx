@@ -38,7 +38,6 @@ export const ARScene = () => {
     const pointPreviewRef = useRef<THREE.Mesh>(null!)
 
     const [pointArray, setPointArray] = useState<PointObject[]>([])
-    const [roomPositions, setRoomPositions] = useState<number[][]>([[]])
     const [localRoomPos, setLocalRoomPos] = useLocalStorage("roomPositions", [
         [0],
     ])
@@ -291,6 +290,7 @@ export const ARScene = () => {
 
     // --- FOR DEBUGGING ON PC ONLY --- //
     const handleAddPointPC = () => {
+        setProjName("<DEBUGGING3>")
         setLocalRoomPos([
             [0, 2, 5],
             [-1, 2, 0],

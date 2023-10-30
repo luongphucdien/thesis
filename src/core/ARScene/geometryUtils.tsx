@@ -145,3 +145,12 @@ export const groupRoots = (
         result.push(arrayClone.splice(0, rootsEachGroup * 3))
     return result
 }
+
+export const radFromTwoPoints = (
+    A: { x: number; y: number },
+    B: { x: number; y: number }
+) => {
+    const dx = A.x - B.x
+    const dy = A.y - B.y
+    return Math.atan2(dy, dx)
+}
