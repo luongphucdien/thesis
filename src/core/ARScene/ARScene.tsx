@@ -219,11 +219,83 @@ export const ARScene = () => {
 
         // =============================== //
 
+        const tempWindowRoots = localWindowPos.map((w, i) => {
+            if (i % 4 < 2) return { x: w[0], y: w[1], z: w[2] }
+            else return
+        })
+
+        const filteredWindowRoots = tempWindowRoots.filter((item) => {
+            return item !== undefined
+        })
+
+        const windowHeights = localWindowPos.map((w, i) => {
+            if (i % 4 === 2) {
+                return parseFloat(
+                    Math.abs(
+                        localWindowPos[i][1] - localWindowPos[i - 1][1]
+                    ).toFixed(3)
+                )
+            }
+        })
+
+        const filteredWindowHeight = windowHeights.filter((i) => {
+            return i !== undefined
+        })
+
+        const fixedWindowRoots = projectToRoomEdge(
+            tempRoomRoots.slice(0, 4),
+            filteredWindowRoots as { x: number; y: number; z: number }[]
+        )
+
+        const windowOffset = localWindowPos.map((w, i) => {
+            if (i % 4 === 0)
+                return parseFloat(
+                    Math.abs(localRoomPos[0][1] - w[1]).toFixed(3)
+                )
+            else return
+        })
+
+        const fixedWindowOffset = windowOffset.filter((item) => {
+            return item !== undefined
+        })
+
+        tempWindowRoots.splice(0)
+
+        filteredWindowHeight.forEach((wh, ih) => {
+            tempWindowRoots.push(
+                {
+                    x: fixedWindowRoots[2 * ih + 0].x,
+                    y: fixedWindowOffset[ih] as number,
+                    z: fixedWindowRoots[2 * ih + 0].y,
+                },
+                {
+                    x: fixedWindowRoots[2 * ih + 1].x,
+                    y: fixedWindowOffset[ih] as number,
+                    z: fixedWindowRoots[2 * ih + 1].y,
+                },
+                {
+                    x: fixedWindowRoots[2 * ih + 1].x,
+                    y: (fixedWindowOffset[ih] as number) + (wh as number),
+                    z: fixedWindowRoots[2 * ih + 1].y,
+                },
+                {
+                    x: fixedWindowRoots[2 * ih + 0].x,
+                    y: (fixedWindowOffset[ih] as number) + (wh as number),
+                    z: fixedWindowRoots[2 * ih + 0].y,
+                }
+            )
+        })
+
+        const flattenWindowRoots = flatten(
+            tempWindowRoots as { x: number; y: number; z: number }[]
+        )
+
         const thisProjObjects: ProjectObjects = {
             name: projName,
             room: {
                 roomRoots: flatten(tempRoomRoots),
                 doorRoots: groupRoots(flattenDoorRoots),
+                windowRoots: groupRoots(flattenWindowRoots),
             },
         }
 

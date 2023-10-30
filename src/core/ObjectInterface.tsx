@@ -33,7 +33,7 @@ export interface WindowObject extends OnWallObject {}
 interface RoomObject {
     roomRoots: number[]
     doorRoots: number[][]
-    testRoom?: number[][]
+    windowRoots: number[][]
 }
 
 export interface ProjectObjects {
