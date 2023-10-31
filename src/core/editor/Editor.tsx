@@ -23,7 +23,7 @@ import { Button } from "../../components/button"
 import { useDisclosure } from "../../util/useDisclosure"
 import { FloorObject, ProjectObjects } from "../ObjectInterface"
 import { ModeType } from "./ModeType"
-import { Door } from "./Openings"
+import { Door, Window } from "./Openings"
 import { Room } from "./Room"
 
 const Indices = {
@@ -62,6 +62,7 @@ export const Editor = () => {
 
     const [roomPositions, setRoomPositions] = useState<number[]>([])
     const [doorPositions, setDoorPositions] = useState<number[][]>([])
+    const [windowPositions, setWindowPositions] = useState<number[][]>([])
 
     const [dirty, setDirty] = useState(false)
 
@@ -77,6 +78,7 @@ export const Editor = () => {
                 setFloorArray(item.floors ? item.floors : [])
                 setRoomPositions(item.room!.roomRoots)
                 setDoorPositions(item.room!.doorRoots)
+                setWindowPositions(item.room!.windowRoots)
             }
         })
         document.title = params.name!
@@ -466,11 +468,21 @@ export const Editor = () => {
                 </mesh>
 
                 <group>
-                    {doorPositions.map((d, i) => (
-                        <Door positions={d} groundY={1} key={`door-${i}`} />
-                    ))}
-
                     <Room positions={roomPositions} groundY={1} />
+
+                    {doorPositions !== undefined &&
+                        doorPositions.map((d, i) => (
+                            <Door positions={d} groundY={1} key={`door-${i}`} />
+                        ))}
+
+                    {windowPositions !== undefined &&
+                        windowPositions.map((w, i) => (
+                            <Window
+                                positions={w}
+                                groundY={1}
+                                key={`window-${i}`}
+                            />
+                        ))}
                 </group>
 
                 <MapControls />
