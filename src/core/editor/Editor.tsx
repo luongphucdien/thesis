@@ -56,7 +56,7 @@ export const Editor = () => {
     const [floorDimension, setFloorDimension] = useState<{
         width: number
         length: number
-    }>({ length: 10, width: 10 })
+    }>({ length: 1, width: 1 })
 
     const [floorArray, setFloorArray] = useState<FloorObject[]>([])
 
@@ -468,7 +468,11 @@ export const Editor = () => {
                 </mesh>
 
                 <group>
-                    <Room positions={roomPositions} groundY={1} />
+                    <Room
+                        positions={roomPositions}
+                        groundY={1}
+                        containerRef={containerRef}
+                    />
 
                     {doorPositions !== undefined &&
                         doorPositions.map((d, i) => (
