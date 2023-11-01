@@ -33,7 +33,7 @@ const dotProduct = (
     return firstPoint.x * secondPoint.x + firstPoint.y * secondPoint.y
 }
 
-const projection = (
+export const projection = (
     A: {
         x: number
         y: number
@@ -71,6 +71,22 @@ export const findPointMinDistance = (
     const idxOfMin = distances.indexOf(Math.min.apply(null, distances))
 
     return points[idxOfMin]
+}
+
+export const findPointMaxDistance = (
+    points: { x: number; y: number }[],
+    pointToCompare: { x: number; y: number }
+) => {
+    const distances = points.map((p) => {
+        return distance(
+            { x: p.x, y: p.y },
+            { x: pointToCompare.x, y: pointToCompare.y }
+        )
+    })
+
+    const idxOfMax = distances.indexOf(Math.max.apply(null, distances))
+
+    return points[idxOfMax]
 }
 
 export const normalizedD = (

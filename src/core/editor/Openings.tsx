@@ -56,9 +56,7 @@ export const Door = (props: DoorProps) => {
     return (
         <mesh
             position={[position.x, groundY + height / 2, position.y]}
-            onUpdate={(self) => {
-                self.rotateY(angle)
-            }}
+            rotation={[0, angle, 0]}
             onPointerEnter={handlePointerIn}
             onPointerOut={handlePointerOut}
             ref={ref}
@@ -129,9 +127,7 @@ export const Window = (props: WindowProps) => {
                 groundY + groundOffset + height / 2,
                 position.y,
             ]}
-            onUpdate={(self) => {
-                self.rotateY(angle)
-            }}
+            rotation={[0, angle, 0]}
             ref={ref}
             onPointerEnter={handlePointerIn}
             onPointerOut={handlePointerOut}

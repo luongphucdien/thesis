@@ -362,7 +362,7 @@ export const ARScene = () => {
 
     // --- FOR DEBUGGING ON PC ONLY --- //
     const handleAddPointPC = () => {
-        setProjName("<DEBUGGING2>")
+        setProjName("<DEBUGGING3>")
         setLocalRoomPos([
             [0, 2, 5],
             [-1, 2, 0],
