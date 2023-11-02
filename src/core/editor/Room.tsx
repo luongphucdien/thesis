@@ -15,6 +15,7 @@ interface RoomProps {
     positions: number[]
     groundY: number
     containerRef: React.RefObject<HTMLDivElement>
+    showScales: boolean
 }
 
 const COLOR_TEXT = "#404040"
@@ -26,6 +27,9 @@ const Ground = (props: {
     groundY: number
     containerRef: React.RefObject<HTMLDivElement>
 }) => {
+    const COLOR_VALID = "#4ade80"
+    const COLOR_INVALID = "#f87171"
+
     const { angle, position, size, containerRef, groundY } = props
 
     const highlighter = useRef<Mesh>(null!)
@@ -48,11 +52,11 @@ const Ground = (props: {
         const intersects = raycaster.intersectObjects(scene.children)
 
         intersects.forEach((intersect) => {
-            if (intersect.object.name === "ground") {
+            if (intersect.object.name === "valid") {
                 const highlighterPos = new Vector3().copy(intersect.point)
                 highlighter.current.position.set(
                     highlighterPos.x,
-                    groundY,
+                    groundY + 0.5,
                     highlighterPos.z
                 )
             }
@@ -67,16 +71,12 @@ const Ground = (props: {
             <mesh
                 position={[position.x, groundY + 0.05, position.y]}
                 rotation={[-Math.PI / 2, 0, -angle]}
-                name="ground"
+                name="valid"
                 onPointerMove={handleOnMouseMove}
                 receiveShadow
             >
-                <planeGeometry args={size} />
-                <meshStandardMaterial
-                    roughness={0}
-                    metalness={0.3}
-                    color={"blue"}
-                />
+                <planeGeometry args={[size[0] - 1, size[1] - 1]} />
+                <meshStandardMaterial visible={false} />
             </mesh>
 
             <mesh ref={highlighter} rotation={[0, -angle, 0]}>
@@ -84,7 +84,7 @@ const Ground = (props: {
                 <meshStandardMaterial
                     roughness={0}
                     metalness={0.3}
-                    color={"blue"}
+                    color={COLOR_VALID}
                 />
             </mesh>
         </>
@@ -92,7 +92,7 @@ const Ground = (props: {
 }
 
 export const Room = (props: RoomProps) => {
-    const { positions, groundY, containerRef } = props
+    const { positions, groundY, containerRef, showScales } = props
 
     const roots = {
         A: {
@@ -187,7 +187,7 @@ export const Room = (props: RoomProps) => {
                 containerRef={containerRef}
             />
 
-            <group>
+            <group visible={showScales}>
                 <mesh>
                     <Line
                         points={[

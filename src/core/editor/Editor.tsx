@@ -1,5 +1,5 @@
 import { MapControls } from "@react-three/drei"
-import { Canvas, ThreeEvent, useThree } from "@react-three/fiber"
+import { Canvas } from "@react-three/fiber"
 import { useLocalStorage } from "@uidotdev/usehooks"
 import React, { useEffect, useRef, useState } from "react"
 import { useCookies } from "react-cookie"
@@ -9,20 +9,19 @@ import {
     IoIosArrowForward,
     IoIosMove,
     IoMdArrowBack,
-    IoMdCheckmark,
     IoMdClose,
     IoMdGrid,
     IoMdSave,
 } from "react-icons/io"
 import { TbAugmentedReality } from "react-icons/tb"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { Mesh, Raycaster, Vector2, Vector3 } from "three"
-import { generateUUID } from "three/src/math/MathUtils.js"
+import { Mesh } from "three"
 import { saveProject } from "../../api"
 import { Button } from "../../components/button"
+import { Modal } from "../../components/modal"
 import { useDisclosure } from "../../util/useDisclosure"
 import { FloorObject, ProjectObjects } from "../ObjectInterface"
-import { ModeType } from "./ModeType"
+import { FurnitureType, ModeType } from "./ModeType"
 import { Door, Window } from "./Openings"
 import { Room } from "./Room"
 
@@ -84,79 +83,14 @@ export const Editor = () => {
         document.title = params.name!
     }, [])
 
-    const CustomGrid = () => {
-        const { camera, scene } = useThree()
-
-        const mousePos = new Vector2()
-        const raycaster = new Raycaster()
-
-        const handleOnMouseMove = (event: ThreeEvent<PointerEvent>) => {
-            mousePos.x = containerRef.current
-                ? (((event.clientX / window.innerWidth) * 2 - 1) * 100) / 100
-                : 0
-
-            mousePos.y = containerRef.current
-                ? ((-(event.clientY / window.innerHeight) * 2 + 1) * 100) / 100
-                : 0
-
-            raycaster.setFromCamera(mousePos, camera)
-            const intersects = raycaster.intersectObjects(scene.children)
-
-            intersects.forEach((intersect) => {
-                if (intersect.object.name === "ground") {
-                    const highlighterPos = new Vector3().copy(intersect.point)
-                    highlighter.current.position.set(
-                        highlighterPos.x,
-                        0.02,
-                        highlighterPos.z
-                    )
-                }
-            })
-
-            const objName = intersects[1].object.name
-            const floorRegEx = new RegExp("^<floor>:[^ ]+$")
-
-            setObjectFound(floorRegEx.test(objName))
-        }
-
-        const handleOnMouseClick = () => {
-            const uuid = generateUUID()
-
-            if (mode === ModeType.Floor) {
-                setFloorArray((floorArray) => [
-                    ...floorArray,
-                    {
-                        width: floorDimension.width,
-                        length: floorDimension.length,
-                        key: `<floor>:${uuid}`,
-                        name: `<floor>:${uuid.split("-")[0]}`,
-                        position: [
-                            highlighter.current.position.x,
-                            0.01,
-                            highlighter.current.position.z,
-                        ],
-                    },
-                ])
-            }
-        }
-
-        return (
-            <mesh
-                rotation={[Math.PI * -0.5, 0, 0]}
-                onPointerMove={handleOnMouseMove}
-                onPointerDown={
-                    mode !== ModeType.Default && mode !== ModeType.Delete
-                        ? handleOnMouseClick
-                        : () => null
-                }
-            >
-                <planeGeometry args={[20, 20]} />
-                <meshBasicMaterial color={"rgb(156,163,175)"} />
-            </mesh>
-        )
-    }
-
     const sidePanelDisclosure = useDisclosure()
+
+    const [showScales, setShowScales] = useState(true)
+
+    const addFurniureDisclosure = useDisclosure()
+
+    const [tableWidth, setTableWidth] = useState(0)
+    const [tableHeight, setTableHeight] = useState(0)
 
     const SidePanel = () => {
         const handleTrigger = () => {
@@ -218,117 +152,27 @@ export const Editor = () => {
                 <div className="flex h-full flex-1 flex-col items-center gap-5 overflow-auto bg-indigo-500 p-4">
                     <p>{`${mode} Mode`}</p>
 
-                    <div className="flex w-full flex-col gap-2">
-                        {floorArray.length > 0 && (
-                            <div className="flex flex-col items-center">
-                                <p>Floors</p>
-                                {floorArray.map((f) => (
-                                    <div
-                                        key={f.key}
-                                        className={
-                                            "flex w-full select-none flex-col justify-between gap-4 rounded-md border border-neutral-100 p-2"
-                                        }
-                                    >
-                                        <table className="[&>tr:last-child>td]:pb-0 [&>tr>td:first-child]:pr-4 [&>tr>td]:pb-2">
-                                            <tr>
-                                                <td>Name</td>
-                                                <td>
-                                                    <input
-                                                        className="w-full text-neutral-800"
-                                                        placeholder="Floor's Name"
-                                                        defaultValue={f.name}
-                                                        onChange={(e) =>
-                                                            setObjNewName(
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                    />
-                                                </td>
-                                            </tr>
+                    <div className="flex w-full flex-col gap-4">
+                        <div className="flex gap-2">
+                            <label htmlFor="show-scales">Show scales?</label>
+                            <input
+                                type="checkbox"
+                                onChange={() => setShowScales(!showScales)}
+                                id="show-scales"
+                                checked={showScales}
+                            />
+                        </div>
 
-                                            <tr>
-                                                <td>Width</td>
-                                                <td>
-                                                    <input className="w-full" />
-                                                </td>
-                                            </tr>
-
-                                            <tr>
-                                                <td>Length</td>
-                                                <td>
-                                                    <input className="w-full" />
-                                                </td>
-                                            </tr>
-                                        </table>
-
-                                        <IconContext.Provider
-                                            value={{ size: "24px" }}
-                                        >
-                                            <div className="flex w-full flex-row-reverse">
-                                                <span
-                                                    className="cursor-pointer"
-                                                    title="Save name"
-                                                    onClick={() =>
-                                                        handleNameChange(
-                                                            f.key,
-                                                            objNewName
-                                                        )
-                                                    }
-                                                >
-                                                    <IoMdCheckmark />
-                                                </span>
-
-                                                <span
-                                                    className="cursor-pointer"
-                                                    title="Delete this object"
-                                                    onClick={() =>
-                                                        handleObjectDelete(
-                                                            f.key
-                                                        )
-                                                    }
-                                                >
-                                                    <IoMdClose />
-                                                </span>
-                                            </div>
-                                        </IconContext.Provider>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {mode === ModeType.Floor && (
-                            <div className="flex flex-col justify-center gap-4 rounded-lg border px-4 pb-3">
-                                <table className="[&>tr>*:first-child]:pr-2 [&>tr>*:last-child]:pl-2 [&>tr>*]:py-2">
-                                    <tr>
-                                        <th>Width</th>
-                                        <th>Length</th>
-                                    </tr>
-
-                                    <tr className="text-neutral-800">
-                                        <td>
-                                            <input
-                                                className="w-full"
-                                                ref={widthRef}
-                                            />
-                                        </td>
-
-                                        <td>
-                                            <input
-                                                className="w-full"
-                                                ref={lengthRef}
-                                            />
-                                        </td>
-                                    </tr>
-                                </table>
-
-                                <Button
-                                    variant="non opaque"
-                                    onClick={handleSetFloorDimension}
-                                >
-                                    Confirm
-                                </Button>
-                            </div>
-                        )}
+                        <div className="flex flex-col gap-4">
+                            <select className="h-10 w-full rounded-lg px-4 text-neutral-800">
+                                <option value={FurnitureType.Table}>
+                                    Table
+                                </option>
+                            </select>
+                            <Button onClick={addFurniureDisclosure.onOpen}>
+                                Add Furniture
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -406,6 +250,70 @@ export const Editor = () => {
             className="relative h-[100vh] w-[100vw] overflow-hidden"
             ref={containerRef}
         >
+            <Modal
+                isOpen={addFurniureDisclosure.isOpen}
+                onClose={addFurniureDisclosure.onClose}
+            >
+                <div className="relative h-full w-full">
+                    <span
+                        className="absolute -right-4 -top-4 rounded-full p-1 transition-all hover:bg-neutral-300 active:bg-neutral-400"
+                        onClick={addFurniureDisclosure.onClose}
+                    >
+                        <IconContext.Provider value={{ size: "24px" }}>
+                            <IoMdClose />
+                        </IconContext.Provider>
+                    </span>
+
+                    <div className="flex flex-col gap-4 pt-3 ">
+                        <p className="text-center text-xl font-medium">
+                            Set Table Dimension
+                        </p>
+
+                        <div className="rounded-xl bg-indigo-600 p-4 text-neutral-100 [&>table>tr:last-child>td]:pb-0 [&>table>tr>td:first-child]:pr-4 [&>table>tr>td>input]:text-neutral-800 [&>table>tr>td]:pb-2">
+                            <table>
+                                <tr>
+                                    <td>Width</td>
+                                    <td>
+                                        <input
+                                            value={tableWidth}
+                                            onChange={(e) =>
+                                                setTableWidth(
+                                                    parseFloat(e.target.value)
+                                                )
+                                            }
+                                            type="number"
+                                        />
+                                    </td>
+                                    <td>m</td>
+                                </tr>
+
+                                <tr>
+                                    <td>Height</td>
+                                    <td>
+                                        <input
+                                            value={tableHeight}
+                                            onChange={(e) =>
+                                                setTableHeight(
+                                                    parseFloat(e.target.value)
+                                                )
+                                            }
+                                            type="number"
+                                        />
+                                    </td>
+                                    <td>m</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <Button
+                            disabled={tableHeight === 0 || tableWidth === 0}
+                        >
+                            Add
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
             <div className="fixed left-0 top-0 z-[999] flex h-12 w-full items-center gap-5 bg-indigo-600 px-2 text-neutral-100">
                 <IconContext.Provider value={{ size: "20px" }}>
                     <span
@@ -436,21 +344,6 @@ export const Editor = () => {
             <SidePanel />
 
             <Canvas camera={{ position: [3, 7, 3] }} shadows>
-                {/* <mesh rotation={[Math.PI * -0.5, 0, 0]} name="ground">
-                    <planeGeometry args={[20, 20]} />
-                    <meshBasicMaterial visible={false} />
-                </mesh> */}
-
-                {/* <mesh
-                    position={[0.5, 0.02, 0.5]}
-                    rotation={[Math.PI * -0.5, 0, 0]}
-                    ref={highlighter}
-                    visible={!objectFound}
-                >
-                    <PreviewMarker mode={mode} />
-                    <meshBasicMaterial color={"green"} />
-                </mesh> */}
-
                 <mesh
                     position={[0.5, 0.02, 0.5]}
                     rotation={[Math.PI * -0.5, 0, 0]}
@@ -472,6 +365,7 @@ export const Editor = () => {
                         positions={roomPositions}
                         groundY={1}
                         containerRef={containerRef}
+                        showScales={showScales}
                     />
 
                     {doorPositions !== undefined &&
@@ -490,7 +384,6 @@ export const Editor = () => {
                 </group>
 
                 <MapControls />
-                {/* <CustomGrid /> */}
                 <axesHelper args={[100]} position={[0, 1, 0]} />
 
                 <ambientLight intensity={1} color={"white"} />

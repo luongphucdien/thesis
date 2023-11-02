@@ -6,3 +6,7 @@ export enum ModeType {
     AR = "AR",
     Default = ModeType.Move,
 }
+
+export enum FurnitureType {
+    Table = "table",
+}
