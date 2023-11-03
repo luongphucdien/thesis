@@ -15,15 +15,17 @@ import {
 } from "react-icons/io"
 import { TbAugmentedReality } from "react-icons/tb"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { Mesh } from "three"
+import { Group, Mesh } from "three"
+import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
 import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { Modal } from "../../components/modal"
 import { useDisclosure } from "../../util/useDisclosure"
+import { distance } from "../ARScene/geometryUtils"
 import { FloorObject, ProjectObjects } from "../ObjectInterface"
 import { FurnitureType, ModeType } from "./ModeType"
 import { Door, Window } from "./Openings"
-import { Room } from "./Room"
+import { Room, Scales } from "./Room"
 
 const Indices = {
     SQUARE: [
@@ -89,8 +91,17 @@ export const Editor = () => {
 
     const addFurniureDisclosure = useDisclosure()
 
-    const [tableWidth, setTableWidth] = useState(0)
-    const [tableHeight, setTableHeight] = useState(0)
+    const [boundDimen, setBoundDimen] = useState<{
+        width: number
+        height: number
+        depth: number
+    }>({ width: 0, height: 0, depth: 0 })
+
+    const roomRef = useRef<Group>(null!)
+
+    const exportRoomDisclosure = useDisclosure()
+
+    const roomAsJSON = useRef<string>("")
 
     const SidePanel = () => {
         const handleTrigger = () => {
@@ -128,6 +139,21 @@ export const Editor = () => {
                 width: parseFloat(widthRef.current.value),
                 length: parseFloat(lengthRef.current.value),
             })
+        }
+
+        const handleExportRoom = () => {
+            const exporter = new GLTFExporter()
+            exporter.parse(
+                roomRef.current,
+                (room) => {
+                    exportRoomDisclosure.onOpen()
+                    roomAsJSON.current = JSON.stringify(room)
+                },
+                (error) => {
+                    console.log("Error", error)
+                },
+                {}
+            )
         }
 
         return (
@@ -169,10 +195,15 @@ export const Editor = () => {
                                     Table
                                 </option>
                             </select>
-                            <Button onClick={addFurniureDisclosure.onOpen}>
+                            <Button
+                                onClick={addFurniureDisclosure.onOpen}
+                                variant="non opaque"
+                            >
                                 Add Furniture
                             </Button>
                         </div>
+
+                        <Button onClick={handleExportRoom}>Export Room</Button>
                     </div>
                 </div>
             </div>
@@ -245,6 +276,27 @@ export const Editor = () => {
 
     const nav = useNavigate()
 
+    const handleAddBoundBox = () => {
+        setMode(ModeType.Bound)
+        addFurniureDisclosure.onClose()
+    }
+
+    const roomWidth = parseFloat(
+        distance(
+            { x: roomPositions[0], y: roomPositions[2] },
+            { x: roomPositions[3], y: roomPositions[5] }
+        ).toFixed(3)
+    )
+
+    const roomDepth = parseFloat(
+        distance(
+            { x: roomPositions[6], y: roomPositions[8] },
+            { x: roomPositions[3], y: roomPositions[5] }
+        ).toFixed(3)
+    )
+
+    const roomHeight = parseFloat(Math.abs(roomPositions[13] - 1).toFixed(3))
+
     return (
         <div
             className="relative h-[100vh] w-[100vw] overflow-hidden"
@@ -266,21 +318,71 @@ export const Editor = () => {
 
                     <div className="flex flex-col gap-4 pt-3 ">
                         <p className="text-center text-xl font-medium">
-                            Set Table Dimension
+                            Set Bounding Box Dimension
                         </p>
 
-                        <div className="rounded-xl bg-indigo-600 p-4 text-neutral-100 [&>table>tr:last-child>td]:pb-0 [&>table>tr>td:first-child]:pr-4 [&>table>tr>td>input]:text-neutral-800 [&>table>tr>td]:pb-2">
+                        <div className="rounded-xl bg-indigo-600 p-4 text-neutral-100 [&>table>tr:last-child>td]:pb-0 [&>table>tr>td:first-child]:pr-4 [&>table>tr>td>input]:pl-2 [&>table>tr>td>input]:text-neutral-800 [&>table>tr>td]:pb-2">
                             <table>
                                 <tr>
                                     <td>Width</td>
                                     <td>
                                         <input
-                                            value={tableWidth}
+                                            value={boundDimen.width}
                                             onChange={(e) =>
-                                                setTableWidth(
-                                                    parseFloat(e.target.value)
-                                                )
+                                                setBoundDimen({
+                                                    ...boundDimen,
+                                                    width: parseFloat(
+                                                        e.target.value
+                                                    ),
+                                                })
                                             }
+                                            onBlur={(e) => {
+                                                setBoundDimen({
+                                                    ...boundDimen,
+                                                    width: Math.min(
+                                                        roomWidth,
+                                                        Math.max(
+                                                            0,
+                                                            parseFloat(
+                                                                e.target.value
+                                                            )
+                                                        )
+                                                    ),
+                                                })
+                                            }}
+                                            type="number"
+                                        />
+                                    </td>
+                                    <td>m</td>
+                                </tr>
+
+                                <tr>
+                                    <td>Depth</td>
+                                    <td>
+                                        <input
+                                            value={boundDimen.depth}
+                                            onChange={(e) =>
+                                                setBoundDimen({
+                                                    ...boundDimen,
+                                                    depth: parseFloat(
+                                                        e.target.value
+                                                    ),
+                                                })
+                                            }
+                                            onBlur={(e) => {
+                                                setBoundDimen({
+                                                    ...boundDimen,
+                                                    depth: Math.min(
+                                                        roomDepth,
+                                                        Math.max(
+                                                            0,
+                                                            parseFloat(
+                                                                e.target.value
+                                                            )
+                                                        )
+                                                    ),
+                                                })
+                                            }}
                                             type="number"
                                         />
                                     </td>
@@ -291,12 +393,29 @@ export const Editor = () => {
                                     <td>Height</td>
                                     <td>
                                         <input
-                                            value={tableHeight}
+                                            value={boundDimen.height}
                                             onChange={(e) =>
-                                                setTableHeight(
-                                                    parseFloat(e.target.value)
-                                                )
+                                                setBoundDimen({
+                                                    ...boundDimen,
+                                                    height: parseFloat(
+                                                        e.target.value
+                                                    ),
+                                                })
                                             }
+                                            onBlur={(e) => {
+                                                setBoundDimen({
+                                                    ...boundDimen,
+                                                    height: Math.min(
+                                                        roomHeight,
+                                                        Math.max(
+                                                            0,
+                                                            parseFloat(
+                                                                e.target.value
+                                                            )
+                                                        )
+                                                    ),
+                                                })
+                                            }}
                                             type="number"
                                         />
                                     </td>
@@ -306,11 +425,32 @@ export const Editor = () => {
                         </div>
 
                         <Button
-                            disabled={tableHeight === 0 || tableWidth === 0}
+                            disabled={
+                                boundDimen.depth <= 0 ||
+                                boundDimen.height <= 0 ||
+                                boundDimen.width <= 0
+                            }
+                            onClick={handleAddBoundBox}
                         >
                             Add
                         </Button>
                     </div>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={exportRoomDisclosure.isOpen}
+                onClose={exportRoomDisclosure.onClose}
+            >
+                <div>
+                    <a
+                        href={`data:text/json;charset=utf-8,${encodeURIComponent(
+                            roomAsJSON.current
+                        )}`}
+                        download={`${projName}.gltf`}
+                    >
+                        Download as GLTF
+                    </a>
                 </div>
             </Modal>
 
@@ -344,28 +484,22 @@ export const Editor = () => {
             <SidePanel />
 
             <Canvas camera={{ position: [3, 7, 3] }} shadows>
-                <mesh
-                    position={[0.5, 0.02, 0.5]}
-                    rotation={[Math.PI * -0.5, 0, 0]}
-                    ref={highlighter}
-                    visible={!objectFound && mode !== ModeType.Move}
-                >
-                    <planeGeometry
-                        args={[floorDimension.width, floorDimension.length]}
-                    />
-                    <meshBasicMaterial color={"green"} />
-                </mesh>
-
                 <mesh visible={dirty} position={[1000, 1000, 1000]}>
                     <boxGeometry />
                 </mesh>
 
-                <group>
+                <group ref={roomRef}>
                     <Room
                         positions={roomPositions}
                         groundY={1}
                         containerRef={containerRef}
                         showScales={showScales}
+                        boundBoxDimen={[
+                            boundDimen.width,
+                            boundDimen.height,
+                            boundDimen.depth,
+                        ]}
+                        mode={mode}
                     />
 
                     {doorPositions !== undefined &&
@@ -381,6 +515,14 @@ export const Editor = () => {
                                 key={`window-${i}`}
                             />
                         ))}
+                </group>
+
+                <group>
+                    <Scales
+                        groundY={1}
+                        positions={roomPositions}
+                        showScales={showScales}
+                    />
                 </group>
 
                 <MapControls />

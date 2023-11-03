@@ -4,6 +4,7 @@ export enum ModeType {
     Floor = "Add Floor",
     Delete = "Delete",
     AR = "AR",
+    Bound = "Boundary Box",
     Default = ModeType.Move,
 }
 
