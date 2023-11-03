@@ -1,7 +1,7 @@
 import { Base, Geometry, Subtraction } from "@react-three/csg"
 import { Billboard, Grid, Line, Text } from "@react-three/drei"
 import { ThreeEvent, useThree } from "@react-three/fiber"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { Mesh, Raycaster, Vector2, Vector3 } from "three"
 import {
     distance,
@@ -10,12 +10,15 @@ import {
     perpPoints,
     radFromTwoPoints,
 } from "../ARScene/geometryUtils"
+import { ModeType } from "./ModeType"
 
 interface RoomProps {
     positions: number[]
     groundY: number
     containerRef: React.RefObject<HTMLDivElement>
     showScales: boolean
+    boundBoxDimen: [width: number, height: number, depth: number]
+    mode: ModeType
 }
 
 const COLOR_TEXT = "#404040"
@@ -26,11 +29,13 @@ const Ground = (props: {
     angle: number
     groundY: number
     containerRef: React.RefObject<HTMLDivElement>
+    boundBoxDimen: [width: number, height: number, depth: number]
 }) => {
     const COLOR_VALID = "#4ade80"
     const COLOR_INVALID = "#f87171"
 
-    const { angle, position, size, containerRef, groundY } = props
+    const { angle, position, size, containerRef, groundY, boundBoxDimen } =
+        props
 
     const highlighter = useRef<Mesh>(null!)
 
@@ -56,7 +61,7 @@ const Ground = (props: {
                 const highlighterPos = new Vector3().copy(intersect.point)
                 highlighter.current.position.set(
                     highlighterPos.x,
-                    groundY + 0.5,
+                    groundY + boundBoxDimen[1] / 2,
                     highlighterPos.z
                 )
             }
@@ -65,6 +70,8 @@ const Ground = (props: {
         const objName = intersects[1].object.name
         const floorRegEx = new RegExp("^<floor>:[^ ]+$")
     }
+
+    const furnitures = useState<{ name: string; mesh: Mesh }[]>([])
 
     return (
         <>
@@ -75,16 +82,23 @@ const Ground = (props: {
                 onPointerMove={handleOnMouseMove}
                 receiveShadow
             >
-                <planeGeometry args={[size[0] - 1, size[1] - 1]} />
-                <meshStandardMaterial visible={false} />
+                <planeGeometry
+                    args={[
+                        size[0] - boundBoxDimen[0],
+                        size[1] - boundBoxDimen[2],
+                    ]}
+                />
+                <meshStandardMaterial visible={true} color="green" />
             </mesh>
 
             <mesh ref={highlighter} rotation={[0, -angle, 0]}>
-                <boxGeometry />
+                <boxGeometry args={boundBoxDimen} />
                 <meshStandardMaterial
                     roughness={0}
                     metalness={0.3}
                     color={COLOR_VALID}
+                    opacity={0.4}
+                    transparent
                 />
             </mesh>
         </>
@@ -92,7 +106,7 @@ const Ground = (props: {
 }
 
 export const Room = (props: RoomProps) => {
-    const { positions, groundY, containerRef, showScales } = props
+    const { positions, groundY, containerRef, boundBoxDimen, mode } = props
 
     const roots = {
         A: {
@@ -119,6 +133,76 @@ export const Room = (props: RoomProps) => {
         x: (roots.A.x + roots.C.x) / 2,
         y: (roots.A.y + roots.C.y) / 2,
     }
+
+    const angle = radFromTwoPoints(roots.A, roots.B)
+
+    return (
+        <>
+            <mesh
+                receiveShadow
+                position={[position.x, groundY + height / 2, position.y]}
+                rotation={[0, -angle, 0]}
+                onPointerEnter={(event) => event.stopPropagation()}
+            >
+                <Geometry>
+                    <Base scale={1}>
+                        <boxGeometry args={[width, height, depth]} />
+                    </Base>
+
+                    <Subtraction scale={0.99} position={[0, 0.015, 0]}>
+                        <boxGeometry args={[width, height, depth]} />
+                    </Subtraction>
+                </Geometry>
+
+                <meshStandardMaterial roughness={0} metalness={0.3} />
+            </mesh>
+
+            {/* {mode === ModeType.Bound && (
+                <Ground
+                    angle={angle}
+                    position={position}
+                    size={[width, depth]}
+                    groundY={groundY}
+                    containerRef={containerRef}
+                    boundBoxDimen={boundBoxDimen}
+                />
+            )} */}
+
+            <pointLight
+                position={[position.x, groundY + height + 1, position.y]}
+                intensity={50}
+            />
+        </>
+    )
+}
+
+export const Scales = (props: {
+    showScales: boolean
+    positions: number[]
+    groundY: number
+}) => {
+    const { showScales, positions, groundY } = props
+
+    const roots = {
+        A: {
+            x: positions[0],
+            y: positions[2],
+        },
+
+        B: {
+            x: positions[3],
+            y: positions[5],
+        },
+
+        C: {
+            x: positions[6],
+            y: positions[8],
+        },
+    }
+
+    const height = positions[13] - groundY
+    const width = distance(roots.A, roots.B)
+    const depth = distance(roots.B, roots.C)
 
     const angle = radFromTwoPoints(roots.A, roots.B)
 
@@ -159,155 +243,109 @@ export const Room = (props: RoomProps) => {
     const _second = secondEdgeMeasurement()
 
     return (
-        <>
-            <mesh
-                receiveShadow
-                position={[position.x, groundY + height / 2, position.y]}
-                rotation={[0, -angle, 0]}
-                onPointerEnter={(event) => event.stopPropagation()}
-            >
-                <Geometry>
-                    <Base scale={1}>
-                        <boxGeometry args={[width, height, depth]} />
-                    </Base>
+        <group visible={showScales}>
+            <mesh>
+                <Line
+                    points={[
+                        new Vector3(_first.AMax.x, groundY, _first.AMax.y),
+                        new Vector3(_first.BMax.x, groundY, _first.BMax.y),
+                    ]}
+                    lineWidth={5}
+                />
 
-                    <Subtraction scale={0.99} position={[0, 0.015, 0]}>
-                        <boxGeometry args={[width, height, depth]} />
-                    </Subtraction>
-                </Geometry>
+                <Grid
+                    position={[
+                        (_first.AMax.x + roots.B.x) / 2,
+                        groundY,
+                        (_first.AMax.y + roots.B.y) / 2,
+                    ]}
+                    args={[width, 2]}
+                    rotation={[0, -angle, 0]}
+                    side={2}
+                />
 
-                <meshStandardMaterial roughness={0} metalness={0.3} />
+                <Billboard
+                    position={[
+                        _first.position.x,
+                        groundY + 0.3,
+                        _first.position.y,
+                    ]}
+                >
+                    <Text scale={0.5} color={COLOR_TEXT}>{`${width.toFixed(
+                        3
+                    )} m`}</Text>
+                </Billboard>
             </mesh>
 
-            <Ground
-                angle={angle}
-                position={position}
-                size={[width, depth]}
-                groundY={groundY}
-                containerRef={containerRef}
-            />
+            <mesh>
+                <Line
+                    points={[
+                        new Vector3(_second.CMax.x, groundY, _second.CMax.y),
+                        new Vector3(_second.BMax.x, groundY, _second.BMax.y),
+                    ]}
+                    lineWidth={5}
+                />
 
-            <group visible={showScales}>
-                <mesh>
-                    <Line
-                        points={[
-                            new Vector3(_first.AMax.x, groundY, _first.AMax.y),
-                            new Vector3(_first.BMax.x, groundY, _first.BMax.y),
-                        ]}
-                        lineWidth={5}
-                    />
+                <Grid
+                    position={[
+                        (_second.BMax.x + roots.C.x) / 2,
+                        groundY,
+                        (_second.BMax.y + roots.C.y) / 2,
+                    ]}
+                    args={[2, depth]}
+                    rotation={[0, -angle, 0]}
+                    side={2}
+                />
 
-                    <Grid
-                        position={[
-                            (_first.AMax.x + roots.B.x) / 2,
-                            groundY,
-                            (_first.AMax.y + roots.B.y) / 2,
-                        ]}
-                        args={[width, 2]}
-                        rotation={[0, -angle, 0]}
-                        side={2}
-                    />
+                <Billboard
+                    position={[
+                        _second.position.x,
+                        groundY + 0.3,
+                        _second.position.y,
+                    ]}
+                >
+                    <Text scale={0.5} color={COLOR_TEXT}>{`${depth.toFixed(
+                        3
+                    )} m`}</Text>
+                </Billboard>
+            </mesh>
 
-                    <Billboard
-                        position={[
-                            _first.position.x,
-                            groundY + 0.3,
-                            _first.position.y,
-                        ]}
-                    >
-                        <Text scale={0.5} color={COLOR_TEXT}>{`${width.toFixed(
-                            3
-                        )} m`}</Text>
-                    </Billboard>
-                </mesh>
-
-                <mesh>
-                    <Line
-                        points={[
-                            new Vector3(
-                                _second.CMax.x,
-                                groundY,
-                                _second.CMax.y
-                            ),
-                            new Vector3(
-                                _second.BMax.x,
-                                groundY,
-                                _second.BMax.y
-                            ),
-                        ]}
-                        lineWidth={5}
-                    />
-
-                    <Grid
-                        position={[
-                            (_second.BMax.x + roots.C.x) / 2,
-                            groundY,
-                            (_second.BMax.y + roots.C.y) / 2,
-                        ]}
-                        args={[2, depth]}
-                        rotation={[0, -angle, 0]}
-                        side={2}
-                    />
-
-                    <Billboard
-                        position={[
-                            _second.position.x,
-                            groundY + 0.3,
-                            _second.position.y,
-                        ]}
-                    >
-                        <Text scale={0.5} color={COLOR_TEXT}>{`${depth.toFixed(
-                            3
-                        )} m`}</Text>
-                    </Billboard>
-                </mesh>
-
-                <mesh>
-                    <Line
-                        points={[
-                            new Vector3(
-                                _second.BMax.x,
-                                groundY,
-                                _second.BMax.y
-                            ),
-                            new Vector3(
-                                _second.BMax.x,
-                                groundY + height,
-                                _second.BMax.y
-                            ),
-                        ]}
-                        lineWidth={5}
-                    />
-
-                    <Grid
-                        position={[
-                            (_second.BMax.x + roots.B.x) / 2,
-                            groundY + height / 2,
-                            (_second.BMax.y + roots.B.y) / 2,
-                        ]}
-                        args={[height, 2]}
-                        rotation={[0, -angle + Math.PI / 2, Math.PI / 2]}
-                        side={2}
-                    />
-
-                    <Billboard
-                        position={[
+            <mesh>
+                <Line
+                    points={[
+                        new Vector3(_second.BMax.x, groundY, _second.BMax.y),
+                        new Vector3(
                             _second.BMax.x,
-                            groundY + height / 2,
-                            _second.BMax.y - 1,
-                        ]}
-                    >
-                        <Text scale={0.5} color={COLOR_TEXT}>{`${height.toFixed(
-                            3
-                        )} m`}</Text>
-                    </Billboard>
-                </mesh>
-            </group>
+                            groundY + height,
+                            _second.BMax.y
+                        ),
+                    ]}
+                    lineWidth={5}
+                />
 
-            <pointLight
-                position={[position.x, groundY + height + 1, position.y]}
-                intensity={50}
-            />
-        </>
+                <Grid
+                    position={[
+                        (_second.BMax.x + roots.B.x) / 2,
+                        groundY + height / 2,
+                        (_second.BMax.y + roots.B.y) / 2,
+                    ]}
+                    args={[height, 2]}
+                    rotation={[0, -angle + Math.PI / 2, Math.PI / 2]}
+                    side={2}
+                />
+
+                <Billboard
+                    position={[
+                        _second.BMax.x,
+                        groundY + height / 2,
+                        _second.BMax.y - 1,
+                    ]}
+                >
+                    <Text scale={0.5} color={COLOR_TEXT}>{`${height.toFixed(
+                        3
+                    )} m`}</Text>
+                </Billboard>
+            </mesh>
+        </group>
     )
 }
