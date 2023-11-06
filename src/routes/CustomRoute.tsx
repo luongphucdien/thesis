@@ -6,7 +6,6 @@ import { Home } from "../pages/home"
 import { SignIn } from "../pages/sign-in"
 import { SignUp } from "../pages/sign-up"
 import { Page } from "./Page"
-import { PageWithBG } from "./PageWithBG"
 import { PrivatePage } from "./PrivatePage"
 import { PublicPage } from "./PublicPage"
 
@@ -18,9 +17,7 @@ export const CustomRoute = () => {
                 element={
                     <PublicPage>
                         <Page title="Home">
-                            <PageWithBG>
-                                <Home />
-                            </PageWithBG>
+                            <Home />
                         </Page>
                     </PublicPage>
                 }
@@ -73,9 +70,7 @@ export const CustomRoute = () => {
                 element={
                     <PublicPage>
                         <Page title="Sign Up">
-                            <PageWithBG>
-                                <SignUp />
-                            </PageWithBG>
+                            <SignUp />
                         </Page>
                     </PublicPage>
                 }
@@ -86,9 +81,7 @@ export const CustomRoute = () => {
                 element={
                     <PublicPage>
                         <Page title="Sign In">
-                            <PageWithBG>
-                                <SignIn />
-                            </PageWithBG>
+                            <SignIn />
                         </Page>
                     </PublicPage>
                 }
