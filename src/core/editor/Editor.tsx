@@ -13,6 +13,7 @@ import {
     IoMdGrid,
     IoMdSave,
 } from "react-icons/io"
+import { MdOutlineFileDownload } from "react-icons/md"
 import { TbAugmentedReality } from "react-icons/tb"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { Group, Mesh } from "three"
@@ -195,6 +196,7 @@ export const Editor = () => {
                                     Table
                                 </option>
                             </select>
+
                             <Button
                                 onClick={addFurniureDisclosure.onOpen}
                                 variant="non opaque"
@@ -203,7 +205,9 @@ export const Editor = () => {
                             </Button>
                         </div>
 
-                        <Button onClick={handleExportRoom}>Export Room</Button>
+                        <Button onClick={handleExportRoom} variant="non opaque">
+                            Export Room
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -448,7 +452,13 @@ export const Editor = () => {
                             roomAsJSON.current
                         )}`}
                         download={`${projName}.gltf`}
+                        className="inline-flex flex-col items-center"
                     >
+                        <span>
+                            <IconContext.Provider value={{ size: "48px" }}>
+                                <MdOutlineFileDownload />
+                            </IconContext.Provider>
+                        </span>
                         Download as GLTF
                     </a>
                 </div>
@@ -467,7 +477,7 @@ export const Editor = () => {
                     <div>
                         <input
                             placeholder="Project Name"
-                            className="text-neutral-800"
+                            className="px-2 text-neutral-800"
                             onChange={(e) => setProjName(e.target.value)}
                             defaultValue={params.name}
                         />

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import { FaChevronLeft } from "react-icons/fa6"
+import { TbAugmentedReality } from "react-icons/tb"
 import { useNavigate } from "react-router-dom"
 import { generateUUID } from "three/src/math/MathUtils.js"
 import { saveProject } from "../../api"
@@ -31,7 +32,7 @@ enum RoomAttributes {
 
 export const ARScene = () => {
     const [cookies] = useCookies(["userUID"])
-    const [projName, setProjName] = useState("<DEBUGGING2>")
+    const [projName, setProjName] = useState("")
 
     const [isARMode, setIsARMode] = useState(false)
 
@@ -386,6 +387,29 @@ export const ARScene = () => {
         ])
     }
 
+    // -- FOR DEBUGGING UI ONLY-- //
+    const _UIRoomPos = [
+        [0, 2, 5],
+        [-1, 2, 0],
+        [1.2, 2, 2.2],
+        [2.1, 2, 1.9],
+        [0, 5, 5],
+    ]
+
+    const _UIDoorPos = [
+        [-0.8, 2, 1],
+        [-0.5, 2, 2],
+        [-0.8, 4, 1],
+        [-0.5, 4, 2],
+    ]
+
+    const _UIWindowPos = [
+        [-0.4, 3.5, 3],
+        [-0.2, 3.5, 4],
+        [-0.4, 4.5, 3],
+        [-0.2, 4.5, 4],
+    ]
+
     return (
         <div
             className={
@@ -406,42 +430,44 @@ export const ARScene = () => {
             )}
 
             {!isARMode && (
-                <div className="flex h-full flex-col items-center justify-center gap-10 p-4">
+                <div className="flex h-full flex-col items-center gap-10 p-4">
                     {show ? (
-                        <>
+                        <div className="flex flex-col items-center gap-2">
                             <p className="text-xl font-semibold">
                                 Markers&apos; Results
                             </p>
 
-                            {localRoomPos ? (
-                                <>
-                                    <p>Room positions</p>
-                                    <CoordinateTable>
-                                        {localRoomPos.map((item, idx) => (
-                                            <CoordinateTable.Row
-                                                key={`row-${idx}`}
-                                            >
-                                                <CoordinateTable.Column>
-                                                    Point {idx + 1}
-                                                </CoordinateTable.Column>
+                            {localRoomPos.length ? (
+                                <div className="flex flex-col items-center gap-4 [&>div:last-child>p]:text-xs [&>div:last-child>p]:font-normal [&>div>p]:text-lg [&>div>p]:font-medium [&>div]:flex [&>div]:flex-col [&>div]:items-center [&>div]:gap-2">
+                                    <div>
+                                        <p>Room positions</p>
+                                        <CoordinateTable>
+                                            {localRoomPos.map((item, idx) => (
+                                                <CoordinateTable.Row
+                                                    key={`row-${idx}`}
+                                                >
+                                                    <CoordinateTable.Column>
+                                                        Point {idx + 1}
+                                                    </CoordinateTable.Column>
 
-                                                <CoordinateTable.Column>
-                                                    {item[0]}
-                                                </CoordinateTable.Column>
+                                                    <CoordinateTable.Column>
+                                                        {item[0]}
+                                                    </CoordinateTable.Column>
 
-                                                <CoordinateTable.Column>
-                                                    {item[1]}
-                                                </CoordinateTable.Column>
+                                                    <CoordinateTable.Column>
+                                                        {item[1]}
+                                                    </CoordinateTable.Column>
 
-                                                <CoordinateTable.Column>
-                                                    {item[2]}
-                                                </CoordinateTable.Column>
-                                            </CoordinateTable.Row>
-                                        ))}
-                                    </CoordinateTable>
+                                                    <CoordinateTable.Column>
+                                                        {item[2]}
+                                                    </CoordinateTable.Column>
+                                                </CoordinateTable.Row>
+                                            ))}
+                                        </CoordinateTable>
+                                    </div>
 
                                     {localDoorPos.length > 0 && (
-                                        <>
+                                        <div>
                                             <p>Door positions</p>
                                             <CoordinateTable>
                                                 {localDoorPos.map((d, i) => (
@@ -466,11 +492,11 @@ export const ARScene = () => {
                                                     </CoordinateTable.Row>
                                                 ))}
                                             </CoordinateTable>
-                                        </>
+                                        </div>
                                     )}
 
                                     {localWindowPos.length > 0 && (
-                                        <>
+                                        <div>
                                             <p>Window positions</p>
                                             <CoordinateTable>
                                                 {localWindowPos.map((d, i) => (
@@ -495,7 +521,7 @@ export const ARScene = () => {
                                                     </CoordinateTable.Row>
                                                 ))}
                                             </CoordinateTable>
-                                        </>
+                                        </div>
                                     )}
 
                                     <div className="flex flex-col items-center gap-4">
@@ -528,14 +554,11 @@ export const ARScene = () => {
                                             </Button>
                                         </div>
                                     </div>
-                                </>
+                                </div>
                             ) : (
-                                <div className="flex flex-col items-center gap-4 text-center">
+                                <div className="flex flex-col items-center gap-2 text-center">
                                     <p>Hmm, there are no markers here.</p>
-                                    <p>
-                                        Please try to scan again and remember to
-                                        tap the marker at the right position!
-                                    </p>
+                                    <p>Please try to scan again!</p>
                                     <div>
                                         <Button onClick={() => navigate(0)}>
                                             Try again
@@ -543,7 +566,7 @@ export const ARScene = () => {
                                     </div>
                                 </div>
                             )}
-                        </>
+                        </div>
                     ) : (
                         <>
                             <p className="text-xl font-semibold">
@@ -551,6 +574,121 @@ export const ARScene = () => {
                             </p>
                         </>
                     )}
+
+                    {/* FOR UI DEBUGGING ONLY */}
+                    <div className="hidden overflow-auto">
+                        <>
+                            <p>Room positions</p>
+                            <CoordinateTable>
+                                {_UIRoomPos.map((item, idx) => (
+                                    <CoordinateTable.Row key={`row-${idx}`}>
+                                        <CoordinateTable.Column>
+                                            Point {idx + 1}
+                                        </CoordinateTable.Column>
+
+                                        <CoordinateTable.Column>
+                                            {item[0]}
+                                        </CoordinateTable.Column>
+
+                                        <CoordinateTable.Column>
+                                            {item[1]}
+                                        </CoordinateTable.Column>
+
+                                        <CoordinateTable.Column>
+                                            {item[2]}
+                                        </CoordinateTable.Column>
+                                    </CoordinateTable.Row>
+                                ))}
+                            </CoordinateTable>
+
+                            {_UIDoorPos.length > 0 && (
+                                <>
+                                    <p>Door positions</p>
+                                    <CoordinateTable>
+                                        {_UIDoorPos.map((d, i) => (
+                                            <CoordinateTable.Row
+                                                key={`door-row-${i}`}
+                                            >
+                                                <CoordinateTable.Column>
+                                                    Position {i}
+                                                </CoordinateTable.Column>
+
+                                                <CoordinateTable.Column>
+                                                    {d[0]}
+                                                </CoordinateTable.Column>
+
+                                                <CoordinateTable.Column>
+                                                    {d[1]}
+                                                </CoordinateTable.Column>
+
+                                                <CoordinateTable.Column>
+                                                    {d[2]}
+                                                </CoordinateTable.Column>
+                                            </CoordinateTable.Row>
+                                        ))}
+                                    </CoordinateTable>
+                                </>
+                            )}
+
+                            {_UIWindowPos.length > 0 && (
+                                <>
+                                    <p>Window positions</p>
+                                    <CoordinateTable>
+                                        {_UIWindowPos.map((d, i) => (
+                                            <CoordinateTable.Row
+                                                key={`door-row-${i}`}
+                                            >
+                                                <CoordinateTable.Column>
+                                                    Position {i}
+                                                </CoordinateTable.Column>
+
+                                                <CoordinateTable.Column>
+                                                    {d[0]}
+                                                </CoordinateTable.Column>
+
+                                                <CoordinateTable.Column>
+                                                    {d[1]}
+                                                </CoordinateTable.Column>
+
+                                                <CoordinateTable.Column>
+                                                    {d[2]}
+                                                </CoordinateTable.Column>
+                                            </CoordinateTable.Row>
+                                        ))}
+                                    </CoordinateTable>
+                                </>
+                            )}
+
+                            <div className="flex flex-col items-center gap-4">
+                                <p className="text-center text-xs">
+                                    Happy with the result? If not, you can try
+                                    again!
+                                </p>
+
+                                <span className="[&>*]:text-neutral-800">
+                                    <TextField
+                                        onChange={(event) =>
+                                            setProjName(event.target.value)
+                                        }
+                                        placeholder="Project Name"
+                                    />
+                                </span>
+
+                                <div className="flex gap-4">
+                                    <Button onClick={() => navigate(0)}>
+                                        No
+                                    </Button>
+
+                                    <Button
+                                        onClick={handleSave}
+                                        disabled={projName === ""}
+                                    >
+                                        Yes!
+                                    </Button>
+                                </div>
+                            </div>
+                        </>
+                    </div>
 
                     {/* <p className="text-center italic sm:hidden">
                         Editor is currently unavailable for mobile, please
@@ -583,21 +721,42 @@ export const ARScene = () => {
                             </option>
                         </select>
 
-                        <p>FOR DEBUGGING ONLY</p>
-                        <Button onClick={handleAddPointPC}>
-                            Populate room roots
-                        </Button>
+                        <div className="flex flex-col gap-2 text-center">
+                            <p>==FOR DEBUGGING ONLY==</p>
+                            <Button onClick={handleAddPointPC}>
+                                Populate room roots
+                            </Button>
 
-                        <Button onClick={handleSave}>Save</Button>
+                            <Button onClick={handleSave}>Save</Button>
+                            <p>=========================</p>
+                        </div>
                     </div>
                 </div>
             )}
 
-            <ARButton />
+            <ARButton
+                style={{
+                    color: "#f5f5f5",
+                    position: "fixed",
+                    background: "#4f46e5",
+                    borderRadius: "9999px",
+                    width: "64px",
+                    height: "64px",
+                    bottom: "24px",
+                    right: "24px",
+                    display: "inline-flex",
+                }}
+            >
+                <span className="inline-flex h-full w-full items-center justify-center">
+                    <IconContext.Provider value={{ size: "32px" }}>
+                        <TbAugmentedReality />
+                    </IconContext.Provider>
+                </span>
+            </ARButton>
 
-            <div className="h-full w-full">
+            <div className="absolute z-[-1] h-full w-full">
                 {isARMode && (
-                    <span className="absolute bottom-20 z-[999] flex h-14 w-full flex-row-reverse gap-4 px-4">
+                    <span className="absolute bottom-28 z-[999] flex h-14 w-full flex-row-reverse gap-4 px-4">
                         <Button variant="primary" onClick={handleAddPoint}>
                             Add
                         </Button>

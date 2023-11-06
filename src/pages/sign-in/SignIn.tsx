@@ -36,7 +36,7 @@ export const SignIn = () => {
 
     return (
         <div className="flex h-full items-center justify-center px-2 sm:px-96">
-            <div className="flex w-full flex-col items-center justify-center gap-6 rounded-xl bg-slate-700 py-14">
+            <div className="flex w-full flex-col items-center justify-center gap-6 rounded-xl bg-indigo-600 py-14 text-neutral-100">
                 <FormControl id="email">
                     <FormControl.Label>Email</FormControl.Label>
                     <TextField
