@@ -149,7 +149,10 @@ export const Room = (props: RoomProps) => {
                         <boxGeometry args={[width, height, depth]} />
                     </Base>
 
-                    <Subtraction scale={0.99} position={[0, 0.015, 0]}>
+                    <Subtraction
+                        scale={[0.99, 1, 0.99]}
+                        position={[0, 0.01, 0]}
+                    >
                         <boxGeometry args={[width, height, depth]} />
                     </Subtraction>
                 </Geometry>

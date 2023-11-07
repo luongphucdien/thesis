@@ -1,4 +1,4 @@
-import { MapControls } from "@react-three/drei"
+import { Environment, OrbitControls } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import { useLocalStorage } from "@uidotdev/usehooks"
 import React, { useEffect, useRef, useState } from "react"
@@ -7,15 +7,11 @@ import { IconContext } from "react-icons"
 import {
     IoIosArrowBack,
     IoIosArrowForward,
-    IoIosMove,
     IoMdArrowBack,
-    IoMdClose,
-    IoMdGrid,
     IoMdSave,
 } from "react-icons/io"
 import { MdOutlineFileDownload } from "react-icons/md"
-import { TbAugmentedReality } from "react-icons/tb"
-import { Link, useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { Group, Mesh } from "three"
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
 import { saveProject } from "../../api"
@@ -24,7 +20,7 @@ import { Modal } from "../../components/modal"
 import { useDisclosure } from "../../util/useDisclosure"
 import { distance } from "../ARScene/geometryUtils"
 import { FloorObject, ProjectObjects } from "../ObjectInterface"
-import { FurnitureType, ModeType } from "./ModeType"
+import { ModeType } from "./ModeType"
 import { Door, Window } from "./Openings"
 import { Room, Scales } from "./Room"
 
@@ -190,7 +186,7 @@ export const Editor = () => {
                             />
                         </div>
 
-                        <div className="flex flex-col gap-4">
+                        {/* <div className="flex flex-col gap-4">
                             <select className="h-10 w-full rounded-lg px-4 text-neutral-800">
                                 <option value={FurnitureType.Table}>
                                     Table
@@ -203,7 +199,7 @@ export const Editor = () => {
                             >
                                 Add Furniture
                             </Button>
-                        </div>
+                        </div> */}
 
                         <Button onClick={handleExportRoom} variant="non opaque">
                             Export Room
@@ -262,20 +258,6 @@ export const Editor = () => {
         >
             <IoMdSave />
         </span>,
-
-        <ModeButton key={"mode-move"} modeType={ModeType.Default}>
-            <IoIosMove />
-        </ModeButton>,
-
-        <ModeButton key={"mode-floor"} modeType={ModeType.Floor}>
-            <IoMdGrid />
-        </ModeButton>,
-
-        <ModeButton key={"mode-ar"} modeType={ModeType.AR}>
-            <Link to={"/ar"}>
-                <TbAugmentedReality />
-            </Link>
-        </ModeButton>,
     ]
 
     const nav = useNavigate()
@@ -306,7 +288,7 @@ export const Editor = () => {
             className="relative h-[100vh] w-[100vw] overflow-hidden"
             ref={containerRef}
         >
-            <Modal
+            {/* <Modal
                 isOpen={addFurniureDisclosure.isOpen}
                 onClose={addFurniureDisclosure.onClose}
             >
@@ -440,7 +422,7 @@ export const Editor = () => {
                         </Button>
                     </div>
                 </div>
-            </Modal>
+            </Modal> */}
 
             <Modal
                 isOpen={exportRoomDisclosure.isOpen}
@@ -474,7 +456,7 @@ export const Editor = () => {
                         <IoMdArrowBack />
                     </span>
 
-                    <div>
+                    {/* <div>
                         <input
                             placeholder="Project Name"
                             className="px-2 text-neutral-800"
@@ -487,7 +469,7 @@ export const Editor = () => {
 
                     {modes.map((item) => (
                         <>{item}</>
-                    ))}
+                    ))} */}
                 </IconContext.Provider>
             </div>
 
@@ -535,10 +517,12 @@ export const Editor = () => {
                     />
                 </group>
 
-                <MapControls />
-                <axesHelper args={[100]} position={[0, 1, 0]} />
+                <OrbitControls />
+                {/* <axesHelper args={[100]} position={[0, 1, 0]} /> */}
 
                 <ambientLight intensity={1} color={"white"} />
+
+                <Environment preset="apartment" blur={0.1} background />
             </Canvas>
         </div>
     )
