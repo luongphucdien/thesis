@@ -9,6 +9,7 @@ export interface PointObject {
     y: number
     z: number
     key: string
+    type: "room" | "door" | "window" | "unknown"
 }
 
 export interface FloorObject extends FPObject {

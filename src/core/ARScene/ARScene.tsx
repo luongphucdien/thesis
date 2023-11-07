@@ -99,8 +99,11 @@ export const ARScene = () => {
     const navigate = useNavigate()
 
     const handleSave = () => {
+        const originalGroundY = localRoomPos[0][1]
+        const groundY = 1
+
         const tempRoomRoots = localRoomPos.map((p) => {
-            return { x: p[0], y: 1, z: p[2] }
+            return { x: p[0], y: groundY, z: p[2] }
         })
 
         const A = tempRoomRoots[0]
@@ -149,7 +152,10 @@ export const ARScene = () => {
             y: innerPoint.z,
         })
 
-        tempRoomRoots.push({ x: C.x, y: 1, z: C.y }, { x: D.x, y: 1, z: D.y })
+        tempRoomRoots.push(
+            { x: C.x, y: groundY, z: C.y },
+            { x: D.x, y: groundY, z: D.y }
+        )
 
         const roofPoints = tempRoomRoots.map((p) => {
             return { x: p.x, y: p.y + roomHeight, z: p.z }
@@ -160,7 +166,7 @@ export const ARScene = () => {
         // ============================ //
 
         const tempDoorRoots = localDoorPos.map((d, i) => {
-            if (i % 4 < 2) return { x: d[0], y: 1, z: d[2] }
+            if (i % 4 < 2) return { x: d[0], y: groundY, z: d[2] }
             else return
         })
 
@@ -193,22 +199,22 @@ export const ARScene = () => {
             tempDoorRoots.push(
                 {
                     x: fixedDoorRoots[2 * ih + 0].x,
-                    y: 1,
+                    y: groundY,
                     z: fixedDoorRoots[2 * ih + 0].y,
                 },
                 {
                     x: fixedDoorRoots[2 * ih + 1].x,
-                    y: 1,
+                    y: groundY,
                     z: fixedDoorRoots[2 * ih + 1].y,
                 },
                 {
                     x: fixedDoorRoots[2 * ih + 1].x,
-                    y: 1 + (dh as number),
+                    y: groundY + (dh as number),
                     z: fixedDoorRoots[2 * ih + 1].y,
                 },
                 {
                     x: fixedDoorRoots[2 * ih + 0].x,
-                    y: 1 + (dh as number),
+                    y: groundY + (dh as number),
                     z: fixedDoorRoots[2 * ih + 0].y,
                 }
             )
@@ -250,9 +256,7 @@ export const ARScene = () => {
 
         const windowOffset = localWindowPos.map((w, i) => {
             if (i % 4 === 0)
-                return parseFloat(
-                    Math.abs(localRoomPos[0][1] - w[1]).toFixed(3)
-                )
+                return parseFloat(Math.abs(originalGroundY - w[1]).toFixed(3))
             else return
         })
 
@@ -333,6 +337,15 @@ export const ARScene = () => {
                 y: pos.y,
                 z: pos.z,
                 key: `<point>-${uuid}`,
+                type: `${
+                    roomAttribute === RoomAttributes.dimension
+                        ? "room"
+                        : roomAttribute === RoomAttributes.door
+                        ? "door"
+                        : roomAttribute === RoomAttributes.window
+                        ? "window"
+                        : "unknown"
+                }`,
             },
         ])
 
@@ -358,6 +371,15 @@ export const ARScene = () => {
 
     const handleRemovePoint = () => {
         setPointArray(pointArray.slice(0, -1))
+
+        if (roomAttribute === RoomAttributes.dimension) {
+            setLocalRoomPos(localRoomPos.slice(0, -1))
+        } else if (roomAttribute === RoomAttributes.door) {
+            setLocalDoorPos(localDoorPos.slice(0, -1))
+        } else if (roomAttribute === RoomAttributes.window) {
+            setLocalWindowPos(localWindowPos.slice(0, -1))
+        }
+
         setDirty(!dirty)
     }
 
@@ -386,29 +408,6 @@ export const ARScene = () => {
             [-0.2, 4.5, 4],
         ])
     }
-
-    // -- FOR DEBUGGING UI ONLY-- //
-    const _UIRoomPos = [
-        [0, 2, 5],
-        [-1, 2, 0],
-        [1.2, 2, 2.2],
-        [2.1, 2, 1.9],
-        [0, 5, 5],
-    ]
-
-    const _UIDoorPos = [
-        [-0.8, 2, 1],
-        [-0.5, 2, 2],
-        [-0.8, 4, 1],
-        [-0.5, 4, 2],
-    ]
-
-    const _UIWindowPos = [
-        [-0.4, 3.5, 3],
-        [-0.2, 3.5, 4],
-        [-0.4, 4.5, 3],
-        [-0.2, 4.5, 4],
-    ]
 
     return (
         <div
@@ -575,152 +574,13 @@ export const ARScene = () => {
                         </>
                     )}
 
-                    {/* FOR UI DEBUGGING ONLY */}
-                    <div className="hidden overflow-auto">
-                        <>
-                            <p>Room positions</p>
-                            <CoordinateTable>
-                                {_UIRoomPos.map((item, idx) => (
-                                    <CoordinateTable.Row key={`row-${idx}`}>
-                                        <CoordinateTable.Column>
-                                            Point {idx + 1}
-                                        </CoordinateTable.Column>
-
-                                        <CoordinateTable.Column>
-                                            {item[0]}
-                                        </CoordinateTable.Column>
-
-                                        <CoordinateTable.Column>
-                                            {item[1]}
-                                        </CoordinateTable.Column>
-
-                                        <CoordinateTable.Column>
-                                            {item[2]}
-                                        </CoordinateTable.Column>
-                                    </CoordinateTable.Row>
-                                ))}
-                            </CoordinateTable>
-
-                            {_UIDoorPos.length > 0 && (
-                                <>
-                                    <p>Door positions</p>
-                                    <CoordinateTable>
-                                        {_UIDoorPos.map((d, i) => (
-                                            <CoordinateTable.Row
-                                                key={`door-row-${i}`}
-                                            >
-                                                <CoordinateTable.Column>
-                                                    Position {i}
-                                                </CoordinateTable.Column>
-
-                                                <CoordinateTable.Column>
-                                                    {d[0]}
-                                                </CoordinateTable.Column>
-
-                                                <CoordinateTable.Column>
-                                                    {d[1]}
-                                                </CoordinateTable.Column>
-
-                                                <CoordinateTable.Column>
-                                                    {d[2]}
-                                                </CoordinateTable.Column>
-                                            </CoordinateTable.Row>
-                                        ))}
-                                    </CoordinateTable>
-                                </>
-                            )}
-
-                            {_UIWindowPos.length > 0 && (
-                                <>
-                                    <p>Window positions</p>
-                                    <CoordinateTable>
-                                        {_UIWindowPos.map((d, i) => (
-                                            <CoordinateTable.Row
-                                                key={`door-row-${i}`}
-                                            >
-                                                <CoordinateTable.Column>
-                                                    Position {i}
-                                                </CoordinateTable.Column>
-
-                                                <CoordinateTable.Column>
-                                                    {d[0]}
-                                                </CoordinateTable.Column>
-
-                                                <CoordinateTable.Column>
-                                                    {d[1]}
-                                                </CoordinateTable.Column>
-
-                                                <CoordinateTable.Column>
-                                                    {d[2]}
-                                                </CoordinateTable.Column>
-                                            </CoordinateTable.Row>
-                                        ))}
-                                    </CoordinateTable>
-                                </>
-                            )}
-
-                            <div className="flex flex-col items-center gap-4">
-                                <p className="text-center text-xs">
-                                    Happy with the result? If not, you can try
-                                    again!
-                                </p>
-
-                                <span className="[&>*]:text-neutral-800">
-                                    <TextField
-                                        onChange={(event) =>
-                                            setProjName(event.target.value)
-                                        }
-                                        placeholder="Project Name"
-                                    />
-                                </span>
-
-                                <div className="flex gap-4">
-                                    <Button onClick={() => navigate(0)}>
-                                        No
-                                    </Button>
-
-                                    <Button
-                                        onClick={handleSave}
-                                        disabled={projName === ""}
-                                    >
-                                        Yes!
-                                    </Button>
-                                </div>
-                            </div>
-                        </>
-                    </div>
-
                     {/* <p className="text-center italic sm:hidden">
                         Editor is currently unavailable for mobile, please
                         access it from your PC or from a device with larger
                         screen.
                     </p> */}
 
-                    <div className="flex flex-col gap-2">
-                        <label htmlFor="room-attr" className="text-base">
-                            Select room attribute
-                        </label>
-
-                        <select
-                            id="room-attr"
-                            className="rounded-lg bg-indigo-600 p-2 text-neutral-100 transition-all hover:bg-indigo-500"
-                            onChange={(e) => {
-                                setRoomAttribute(
-                                    parseInt(e.target.value) as RoomAttributes
-                                )
-                            }}
-                        >
-                            <option value={RoomAttributes.dimension}>
-                                Room Dimension
-                            </option>
-
-                            <option value={RoomAttributes.door}>Door</option>
-
-                            <option value={RoomAttributes.window}>
-                                Window
-                            </option>
-                        </select>
-
+                    <div className="flex !hidden flex-col gap-2">
                         <div className="flex flex-col gap-2 text-center">
                             <p>==FOR DEBUGGING ONLY==</p>
                             <Button onClick={handleAddPointPC}>
@@ -754,51 +614,82 @@ export const ARScene = () => {
                 </span>
             </ARButton>
 
-            <div className="absolute z-[-1] h-full w-full">
+            <div className="absolute">
                 {isARMode && (
-                    <span className="absolute bottom-28 z-[999] flex h-14 w-full flex-row-reverse gap-4 px-4">
-                        <Button variant="primary" onClick={handleAddPoint}>
-                            Add
-                        </Button>
+                    <div className="fixed bottom-28 left-0 z-[999] flex w-full flex-col gap-10">
+                        <div className="flex w-full justify-center">
+                            <select
+                                id="room-attr"
+                                className="rounded-lg bg-indigo-600 p-2 text-neutral-100 transition-all hover:bg-indigo-500"
+                                onChange={(e) => {
+                                    setRoomAttribute(
+                                        parseInt(
+                                            e.target.value
+                                        ) as RoomAttributes
+                                    )
+                                }}
+                            >
+                                <option value={RoomAttributes.dimension}>
+                                    Room
+                                </option>
 
-                        <Button variant="error" onClick={handleRemovePoint}>
-                            Remove
-                        </Button>
-                    </span>
+                                <option value={RoomAttributes.door}>
+                                    Door
+                                </option>
+
+                                <option value={RoomAttributes.window}>
+                                    Window
+                                </option>
+                            </select>
+                        </div>
+
+                        <span className="z-[999] flex h-14 flex-row-reverse gap-4 px-4">
+                            <Button variant="primary" onClick={handleAddPoint}>
+                                Add
+                            </Button>
+
+                            <Button variant="error" onClick={handleRemovePoint}>
+                                Remove
+                            </Button>
+                        </span>
+                    </div>
                 )}
 
-                <Canvas>
-                    <XR
-                        referenceSpace="local"
-                        onSessionStart={onSessionStart}
-                        onSessionEnd={onSessionEnd}
-                    >
-                        {isARMode && (
-                            <>
-                                <ambientLight />
-                                <pointLight position={[10, 10, 10]} />
-                                <MarkerPreview />
-                                <Controllers />
+                <div className="z-[-1]">
+                    <Canvas>
+                        <XR
+                            referenceSpace="local"
+                            onSessionStart={onSessionStart}
+                            onSessionEnd={onSessionEnd}
+                        >
+                            {isARMode && (
+                                <>
+                                    <ambientLight />
+                                    <pointLight position={[10, 10, 10]} />
+                                    <MarkerPreview />
+                                    <Controllers />
 
-                                <mesh
-                                    position={[1000, 1000, 1000]}
-                                    visible={dirty}
-                                >
-                                    <boxGeometry args={[0.1, 0.1, 0.1]} />
-                                </mesh>
+                                    <mesh
+                                        position={[1000, 1000, 1000]}
+                                        visible={dirty}
+                                    >
+                                        <boxGeometry args={[0.1, 0.1, 0.1]} />
+                                    </mesh>
 
-                                {pointArray.map((p) => (
-                                    <Point
-                                        key={p.key}
-                                        x={p.x}
-                                        y={p.y}
-                                        z={p.z}
-                                    />
-                                ))}
-                            </>
-                        )}
-                    </XR>
-                </Canvas>
+                                    {pointArray.map((p) => (
+                                        <Point
+                                            key={p.key}
+                                            x={p.x}
+                                            y={p.y}
+                                            z={p.z}
+                                            type={p.type}
+                                        />
+                                    ))}
+                                </>
+                            )}
+                        </XR>
+                    </Canvas>
+                </div>
             </div>
         </div>
     )

@@ -75,10 +75,12 @@ export const Dashboard = () => {
         deleteModalDisclosure.onOpen()
     }
     const handleDeleteProject = async (name: string) => {
-        deleteProject(name, cookies.userUID)
-        deleteModalDisclosure.onClose()
-        await timeout(1)
-        nav(0)
+        deleteProject(name, cookies.userUID).then(async () => {
+            await timeout(1).then(() => {
+                deleteModalDisclosure.onClose()
+                nav(0)
+            })
+        })
     }
 
     return (
