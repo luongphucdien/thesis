@@ -3,7 +3,7 @@ import { CustomRoute } from "./routes"
 
 function App() {
     return (
-        <BrowserRouter>
+        <BrowserRouter basename="/">
             <CustomRoute />
         </BrowserRouter>
     )
