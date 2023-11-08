@@ -147,7 +147,7 @@ export const Dashboard = () => {
 
                         <div className="flex h-full flex-col">
                             <div className="flex-1">
-                                <Button variant="non opaque">Profile</Button>
+                                {/* <Button variant="non opaque">Profile</Button> */}
                             </div>
                             <div>
                                 <Button
