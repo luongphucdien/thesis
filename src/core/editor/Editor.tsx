@@ -4,12 +4,7 @@ import { useLocalStorage } from "@uidotdev/usehooks"
 import React, { useEffect, useRef, useState } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
-import {
-    IoIosArrowBack,
-    IoIosArrowForward,
-    IoMdArrowBack,
-    IoMdSave,
-} from "react-icons/io"
+import { IoMdArrowBack, IoMdSave } from "react-icons/io"
 import { MdOutlineFileDownload } from "react-icons/md"
 import { useNavigate, useParams } from "react-router-dom"
 import { Group, Mesh } from "three"
@@ -18,11 +13,14 @@ import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { Modal } from "../../components/modal"
 import { useDisclosure } from "../../util/useDisclosure"
+import { useToggle } from "../../util/useToggle"
 import { distance } from "../ARScene/geometryUtils"
 import { FloorObject, ProjectObjects } from "../ObjectInterface"
+import { GroundSurface } from "./GroundSurface"
 import { ModeType } from "./ModeType"
 import { Door, Window } from "./Openings"
 import { Room, Scales } from "./Room"
+import { SidePanel } from "./SidePanel"
 
 const Indices = {
     SQUARE: [
@@ -82,7 +80,7 @@ export const Editor = () => {
         document.title = params.name!
     }, [])
 
-    const sidePanelDisclosure = useDisclosure()
+    const sidePanelToggle = useToggle()
 
     const [showScales, setShowScales] = useState(true)
 
@@ -99,116 +97,6 @@ export const Editor = () => {
     const exportRoomDisclosure = useDisclosure()
 
     const roomAsJSON = useRef<string>("")
-
-    const SidePanel = () => {
-        const handleTrigger = () => {
-            sidePanelDisclosure.isOpen
-                ? sidePanelDisclosure.onClose()
-                : sidePanelDisclosure.onOpen()
-        }
-
-        const handleObjectDelete = (objectKey: string) => {
-            const objType = objectKey.split(":")[0]
-            if (objType === "<floor>") {
-                setFloorArray(floorArray.filter((f) => f.key !== objectKey))
-            }
-            setDirty(!dirty)
-        }
-
-        const [objNewName, setObjNewName] = useState("")
-        const handleNameChange = (objectKey: string, newName: string) => {
-            const objType = objectKey.split(":")[0]
-            if (objType === "<floor>") {
-                const newFloorArray = floorArray.map((f) => {
-                    if (f.key === objectKey) {
-                        return { ...f, name: `<floor>:${newName}` }
-                    } else {
-                        return f
-                    }
-                })
-                setFloorArray(newFloorArray)
-            }
-            setDirty(!dirty)
-        }
-
-        const handleSetFloorDimension = () => {
-            setFloorDimension({
-                width: parseFloat(widthRef.current.value),
-                length: parseFloat(lengthRef.current.value),
-            })
-        }
-
-        const handleExportRoom = () => {
-            const exporter = new GLTFExporter()
-            exporter.parse(
-                roomRef.current,
-                (room) => {
-                    exportRoomDisclosure.onOpen()
-                    roomAsJSON.current = JSON.stringify(room)
-                },
-                (error) => {
-                    console.log("Error", error)
-                },
-                {}
-            )
-        }
-
-        return (
-            <div
-                className={`pointer-events-auto absolute top-0 z-[999] flex h-full w-80 items-center text-neutral-100 ${
-                    sidePanelDisclosure.isOpen ? "right-0" : "-right-72"
-                }`}
-            >
-                <span
-                    className=" cursor-pointer rounded-s-xl bg-indigo-500 py-5 text-neutral-100"
-                    onClick={handleTrigger}
-                >
-                    <IconContext.Provider value={{ size: "24px" }}>
-                        {sidePanelDisclosure.isOpen ? (
-                            <IoIosArrowForward />
-                        ) : (
-                            <IoIosArrowBack />
-                        )}
-                    </IconContext.Provider>
-                </span>
-
-                <div className="flex h-full flex-1 flex-col items-center gap-5 overflow-auto bg-indigo-500 p-4">
-                    <p>{`${mode} Mode`}</p>
-
-                    <div className="flex w-full flex-col gap-4">
-                        <div className="flex gap-2">
-                            <label htmlFor="show-scales">Show scales?</label>
-                            <input
-                                type="checkbox"
-                                onChange={() => setShowScales(!showScales)}
-                                id="show-scales"
-                                checked={showScales}
-                            />
-                        </div>
-
-                        {/* <div className="flex flex-col gap-4">
-                            <select className="h-10 w-full rounded-lg px-4 text-neutral-800">
-                                <option value={FurnitureType.Table}>
-                                    Table
-                                </option>
-                            </select>
-
-                            <Button
-                                onClick={addFurniureDisclosure.onOpen}
-                                variant="non opaque"
-                            >
-                                Add Furniture
-                            </Button>
-                        </div> */}
-
-                        <Button onClick={handleExportRoom} variant="non opaque">
-                            Export Room
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
 
     const ModeButton = ({
         children,
@@ -283,146 +171,119 @@ export const Editor = () => {
 
     const roomHeight = parseFloat(Math.abs(roomPositions[13] - 1).toFixed(3))
 
+    const handleExportRoom = () => {
+        const exporter = new GLTFExporter()
+        exporter.parse(
+            roomRef.current,
+            (room) => {
+                exportRoomDisclosure.onOpen()
+                roomAsJSON.current = JSON.stringify(room)
+            },
+            (error) => {
+                console.log("Error", error)
+            },
+            {}
+        )
+    }
+
+    const objectWidth = useRef<HTMLInputElement>(null!)
+    const objectHeight = useRef<HTMLInputElement>(null!)
+    const objectDepth = useRef<HTMLInputElement>(null!)
+    const objectName = useRef<HTMLInputElement>(null!)
+
+    const [objectBound, setObjectBound] = useState<{
+        width: number
+        height: number
+        depth: number
+        name: string
+    }>({
+        name: "",
+        depth: 0,
+        height: 0,
+        width: 0,
+    })
+
+    const [groundIsShown, setGroundIsShown] = useState<boolean>(false)
+
+    const handleAddObject = () => {
+        const width = parseFloat(objectWidth.current.value)
+
+        const height = parseFloat(objectHeight.current.value)
+
+        const depth = parseFloat(objectDepth.current.value)
+
+        const name = objectName.current.value
+
+        if (width > 0 && height > 0 && depth > 0 && name.length > 0) {
+            setGroundIsShown(true)
+
+            setObjectBound({
+                width: width,
+                height: height,
+                depth: depth,
+                name: name,
+            })
+        } else {
+            alert("All the fields must not be empty")
+        }
+    }
+
+    const resetObject = () => {
+        setObjectBound({
+            width: 0,
+            depth: 0,
+            height: 0,
+            name: "",
+        })
+
+        objectWidth.current.value = ""
+        objectHeight.current.value = ""
+        objectDepth.current.value = ""
+        objectName.current.value = ""
+
+        setGroundIsShown(false)
+    }
+
+    const addObjectDisclosure = useDisclosure()
+
+    const handleGroundOnClick = () => {
+        addObjectDisclosure.onOpen()
+    }
+
     return (
         <div
             className="relative h-[100vh] w-[100vw] overflow-hidden"
             ref={containerRef}
         >
-            {/* <Modal
-                isOpen={addFurniureDisclosure.isOpen}
-                onClose={addFurniureDisclosure.onClose}
+            <Modal
+                isOpen={addObjectDisclosure.isOpen}
+                onClose={addObjectDisclosure.onClose}
             >
-                <div className="relative h-full w-full">
-                    <span
-                        className="absolute -right-4 -top-4 rounded-full p-1 transition-all hover:bg-neutral-300 active:bg-neutral-400"
-                        onClick={addFurniureDisclosure.onClose}
-                    >
-                        <IconContext.Provider value={{ size: "24px" }}>
-                            <IoMdClose />
-                        </IconContext.Provider>
-                    </span>
+                <div className="flex flex-col items-center gap-4">
+                    <p className="text-xl font-medium">
+                        Add {objectBound.name} here?
+                    </p>
 
-                    <div className="flex flex-col gap-4 pt-3 ">
-                        <p className="text-center text-xl font-medium">
-                            Set Bounding Box Dimension
-                        </p>
-
-                        <div className="rounded-xl bg-indigo-600 p-4 text-neutral-100 [&>table>tr:last-child>td]:pb-0 [&>table>tr>td:first-child]:pr-4 [&>table>tr>td>input]:pl-2 [&>table>tr>td>input]:text-neutral-800 [&>table>tr>td]:pb-2">
-                            <table>
-                                <tr>
-                                    <td>Width</td>
-                                    <td>
-                                        <input
-                                            value={boundDimen.width}
-                                            onChange={(e) =>
-                                                setBoundDimen({
-                                                    ...boundDimen,
-                                                    width: parseFloat(
-                                                        e.target.value
-                                                    ),
-                                                })
-                                            }
-                                            onBlur={(e) => {
-                                                setBoundDimen({
-                                                    ...boundDimen,
-                                                    width: Math.min(
-                                                        roomWidth,
-                                                        Math.max(
-                                                            0,
-                                                            parseFloat(
-                                                                e.target.value
-                                                            )
-                                                        )
-                                                    ),
-                                                })
-                                            }}
-                                            type="number"
-                                        />
-                                    </td>
-                                    <td>m</td>
-                                </tr>
-
-                                <tr>
-                                    <td>Depth</td>
-                                    <td>
-                                        <input
-                                            value={boundDimen.depth}
-                                            onChange={(e) =>
-                                                setBoundDimen({
-                                                    ...boundDimen,
-                                                    depth: parseFloat(
-                                                        e.target.value
-                                                    ),
-                                                })
-                                            }
-                                            onBlur={(e) => {
-                                                setBoundDimen({
-                                                    ...boundDimen,
-                                                    depth: Math.min(
-                                                        roomDepth,
-                                                        Math.max(
-                                                            0,
-                                                            parseFloat(
-                                                                e.target.value
-                                                            )
-                                                        )
-                                                    ),
-                                                })
-                                            }}
-                                            type="number"
-                                        />
-                                    </td>
-                                    <td>m</td>
-                                </tr>
-
-                                <tr>
-                                    <td>Height</td>
-                                    <td>
-                                        <input
-                                            value={boundDimen.height}
-                                            onChange={(e) =>
-                                                setBoundDimen({
-                                                    ...boundDimen,
-                                                    height: parseFloat(
-                                                        e.target.value
-                                                    ),
-                                                })
-                                            }
-                                            onBlur={(e) => {
-                                                setBoundDimen({
-                                                    ...boundDimen,
-                                                    height: Math.min(
-                                                        roomHeight,
-                                                        Math.max(
-                                                            0,
-                                                            parseFloat(
-                                                                e.target.value
-                                                            )
-                                                        )
-                                                    ),
-                                                })
-                                            }}
-                                            type="number"
-                                        />
-                                    </td>
-                                    <td>m</td>
-                                </tr>
-                            </table>
-                        </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="error"
+                            onClick={() => addObjectDisclosure.onClose()}
+                        >
+                            No
+                        </Button>
 
                         <Button
-                            disabled={
-                                boundDimen.depth <= 0 ||
-                                boundDimen.height <= 0 ||
-                                boundDimen.width <= 0
-                            }
-                            onClick={handleAddBoundBox}
+                            variant="primary"
+                            onClick={() => {
+                                setGroundIsShown(false)
+                                addObjectDisclosure.onClose()
+                            }}
                         >
-                            Add
+                            Yes
                         </Button>
                     </div>
                 </div>
-            </Modal> */}
+            </Modal>
 
             <Modal
                 isOpen={exportRoomDisclosure.isOpen}
@@ -455,25 +316,87 @@ export const Editor = () => {
                     >
                         <IoMdArrowBack />
                     </span>
-
-                    {/* <div>
-                        <input
-                            placeholder="Project Name"
-                            className="px-2 text-neutral-800"
-                            onChange={(e) => setProjName(e.target.value)}
-                            defaultValue={params.name}
-                        />
-                    </div>
-
-                    <div className="h-full w-0.5 bg-neutral-100" />
-
-                    {modes.map((item) => (
-                        <>{item}</>
-                    ))} */}
                 </IconContext.Provider>
             </div>
 
-            <SidePanel />
+            <SidePanel
+                state={sidePanelToggle.state}
+                toggle={sidePanelToggle.toggle}
+            >
+                <div className="flex h-full flex-1 flex-col items-center gap-5 overflow-auto bg-indigo-500 p-4">
+                    <p>{`${mode} Mode`}</p>
+
+                    <div className="flex w-full flex-col gap-6">
+                        <div className="flex gap-2">
+                            <label htmlFor="show-scales">Show scales?</label>
+                            <input
+                                type="checkbox"
+                                onChange={() => setShowScales(!showScales)}
+                                id="show-scales"
+                                checked={showScales}
+                            />
+                        </div>
+
+                        <div className="flex flex-col items-center gap-4 rounded-xl border-4 border-indigo-400 p-2">
+                            <p className="text-xl font-semibold">Add Object</p>
+
+                            <table className="[&>tr:last-child>td]:pb-0 [&>tr>td:first-child]:pr-4 [&>tr>td>input]:w-full [&>tr>td>input]:text-neutral-800 [&>tr>td]:pb-2">
+                                <tr>
+                                    <td>Name</td>
+                                    <td>
+                                        <input type="text" ref={objectName} />
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>Width</td>
+                                    <td>
+                                        <input
+                                            type="number"
+                                            ref={objectWidth}
+                                        />
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>Height</td>
+                                    <td>
+                                        <input
+                                            type="number"
+                                            ref={objectHeight}
+                                        />
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>Depth</td>
+                                    <td>
+                                        <input
+                                            type="number"
+                                            ref={objectDepth}
+                                        />
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <Button
+                                variant="non opaque"
+                                onClick={handleAddObject}
+                            >
+                                Add
+                            </Button>
+
+                            <Button variant="non opaque" onClick={resetObject}>
+                                Reset
+                            </Button>
+                        </div>
+
+                        <Button onClick={handleExportRoom} variant="non opaque">
+                            Export Room
+                        </Button>
+                    </div>
+                </div>
+            </SidePanel>
 
             <Canvas camera={{ position: [3, 7, 3] }} shadows>
                 <mesh visible={dirty} position={[1000, 1000, 1000]}>
@@ -516,6 +439,18 @@ export const Editor = () => {
                         showScales={showScales}
                     />
                 </group>
+
+                {groundIsShown && (
+                    <group>
+                        <GroundSurface
+                            roomPositions={roomPositions}
+                            containerRef={containerRef}
+                            groundY={1}
+                            object={objectBound}
+                            onClick={handleGroundOnClick}
+                        />
+                    </group>
+                )}
 
                 <OrbitControls />
                 {/* <axesHelper args={[100]} position={[0, 1, 0]} /> */}
