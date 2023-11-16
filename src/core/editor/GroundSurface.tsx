@@ -13,7 +13,7 @@ export const GroundSurface = (props: {
         depth: number
         name: string
     }
-    onClick: () => void
+    onClick: (objPos: Vector3, angle: number) => void
 }) => {
     const { roomPositions, containerRef, groundY, object, onClick } = props
     const roots = {
@@ -83,7 +83,9 @@ export const GroundSurface = (props: {
                 position={[position.x, groundY + 0.02, position.y]}
                 rotation={[-Math.PI / 2, 0, angle]}
                 onPointerMove={handleOnMouseMove}
-                onClick={onClick}
+                onClick={() => {
+                    onClick(highlighter.current.position, angle)
+                }}
                 name="valid"
             >
                 <planeGeometry args={[width, depth]} />

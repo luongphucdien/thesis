@@ -1,12 +1,10 @@
 import { Addition, Base, Geometry, Subtraction } from "@react-three/csg"
-import { Billboard, Html } from "@react-three/drei"
-import React, { useRef } from "react"
-import { IconContext } from "react-icons"
-import { MdClose } from "react-icons/md"
+import { useRef } from "react"
 import { Color, Euler, Mesh, MeshBasicMaterial } from "three"
 import { Button } from "../../components/button"
 import { useToggle } from "../../util/useToggle"
 import { distance, radFromTwoPoints } from "../ARScene/geometryUtils"
+import { InfoBoard } from "./InfoBoard"
 
 interface OpeningProps {
     positions: number[]
@@ -32,31 +30,6 @@ const useCalculation = (positions: number[], groundY: number) => {
     }
 
     return { width, height, angle, position }
-}
-
-interface InfoBoardProps extends React.PropsWithChildren {
-    onClose: () => void
-}
-
-const InfoBoard = (props: InfoBoardProps) => {
-    const { children, onClose } = props
-    return (
-        <Billboard>
-            <Html>
-                <div className="relative rounded-xl bg-indigo-600 p-4">
-                    <span
-                        className="absolute right-2 top-2 rounded-full p-1 text-neutral-100 transition-all hover:bg-indigo-700 active:bg-indigo-800"
-                        onClick={onClose}
-                    >
-                        <IconContext.Provider value={{ size: "24px" }}>
-                            <MdClose />
-                        </IconContext.Provider>
-                    </span>
-                    {children}
-                </div>
-            </Html>
-        </Billboard>
-    )
 }
 
 interface DoorProps extends OpeningProps {}

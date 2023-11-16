@@ -1,3 +1,5 @@
+import { Vector3 } from "three"
+
 interface FPObject {
     position: [x: number, y: number, z: number]
     key: string
@@ -37,9 +39,17 @@ interface RoomObject {
     windowRoots: number[][]
 }
 
+export interface CustomObject {
+    name: string
+    dimension: [width: number, height: number, depth: number]
+    position: Vector3
+    angle: number
+}
+
 export interface ProjectObjects {
     name: string
     floors?: FloorObject[]
     floorBuffer?: FloorBufferObject
     room?: RoomObject
+    objects?: CustomObject[]
 }
