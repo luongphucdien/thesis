@@ -1,38 +1,26 @@
 import { Environment, OrbitControls } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import { useLocalStorage } from "@uidotdev/usehooks"
-import React, { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
-import { IoMdArrowBack, IoMdSave } from "react-icons/io"
+import { IoMdArrowBack } from "react-icons/io"
 import { MdOutlineFileDownload } from "react-icons/md"
 import { useNavigate, useParams } from "react-router-dom"
-import { Group, Mesh } from "three"
+import { Group, Vector3 } from "three"
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
 import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { Modal } from "../../components/modal"
 import { useDisclosure } from "../../util/useDisclosure"
 import { useToggle } from "../../util/useToggle"
-import { distance } from "../ARScene/geometryUtils"
-import { FloorObject, ProjectObjects } from "../ObjectInterface"
+import { CustomObject, FloorObject, ProjectObjects } from "../ObjectInterface"
 import { GroundSurface } from "./GroundSurface"
 import { ModeType } from "./ModeType"
+import { Object } from "./Object"
 import { Door, Window } from "./Openings"
 import { Room, Scales } from "./Room"
 import { SidePanel } from "./SidePanel"
-
-const Indices = {
-    SQUARE: [
-        0, 1, 2, 3, 2, 1, 1, 0, 4, 4, 5, 1, 3, 1, 7, 5, 7, 1, 2, 3, 7, 7, 6, 2,
-        0, 2, 6, 6, 4, 0,
-    ],
-    SQUARE2: [
-        0, 1, 2, 2, 3, 0, 0, 4, 5, 5, 1, 0, 1, 5, 6, 6, 2, 1, 2, 6, 7, 7, 3, 2,
-        3, 7, 4, 4, 0, 3,
-    ],
-    DOOR: [0, 1, 2, 2, 3, 0],
-}
 
 export const Editor = () => {
     const params = useParams()
@@ -40,25 +28,18 @@ export const Editor = () => {
     const [cookies] = useCookies(["userUID"])
 
     const containerRef = useRef<HTMLDivElement>(null)
-    const highlighter = useRef<Mesh>(null!)
 
-    const [objectFound, setObjectFound] = useState<boolean>(false)
     const [mode, setMode] = useState(ModeType.Default)
 
     const [projName, setProjName] = useState(params.name!)
-
-    const widthRef = useRef<HTMLInputElement>(null!)
-    const lengthRef = useRef<HTMLInputElement>(null!)
-    const [floorDimension, setFloorDimension] = useState<{
-        width: number
-        length: number
-    }>({ length: 1, width: 1 })
 
     const [floorArray, setFloorArray] = useState<FloorObject[]>([])
 
     const [roomPositions, setRoomPositions] = useState<number[]>([])
     const [doorPositions, setDoorPositions] = useState<number[][]>([])
     const [windowPositions, setWindowPositions] = useState<number[][]>([])
+
+    const [objList, setObjList] = useState<CustomObject[]>([])
 
     const [dirty, setDirty] = useState(false)
 
@@ -71,10 +52,10 @@ export const Editor = () => {
     useEffect(() => {
         projects.forEach((item) => {
             if (item.name === params.name) {
-                setFloorArray(item.floors ? item.floors : [])
                 setRoomPositions(item.room!.roomRoots)
                 setDoorPositions(item.room!.doorRoots)
                 setWindowPositions(item.room!.windowRoots)
+                setObjList(item.objects ? item.objects : [])
             }
         })
         document.title = params.name!
@@ -83,8 +64,6 @@ export const Editor = () => {
     const sidePanelToggle = useToggle()
 
     const [showScales, setShowScales] = useState(true)
-
-    const addFurniureDisclosure = useDisclosure()
 
     const [boundDimen, setBoundDimen] = useState<{
         width: number
@@ -98,23 +77,6 @@ export const Editor = () => {
 
     const roomAsJSON = useRef<string>("")
 
-    const ModeButton = ({
-        children,
-        modeType,
-    }: React.PropsWithChildren<{ modeType: ModeType }>) => {
-        return (
-            <span
-                className={`cursor-pointer rounded-md p-1 ${
-                    modeType === mode ? "bg-indigo-800" : ""
-                }`}
-                onClick={() => setMode(modeType)}
-                title={modeType}
-            >
-                {children}
-            </span>
-        )
-    }
-
     const handleOnSaveSuccess = () => {
         alert("Save successfully!")
         nav(-1)
@@ -126,7 +88,7 @@ export const Editor = () => {
     const handleSave = () => {
         const thisProject: ProjectObjects = {
             name: projName,
-            floors: floorArray,
+            objects: objList,
         }
         saveProject(
             cookies.userUID,
@@ -137,39 +99,7 @@ export const Editor = () => {
         )
     }
 
-    const modes = [
-        <span
-            key={"mode-save"}
-            onClick={handleSave}
-            className={"cursor-pointer rounded-md p-1"}
-            title="Save"
-        >
-            <IoMdSave />
-        </span>,
-    ]
-
     const nav = useNavigate()
-
-    const handleAddBoundBox = () => {
-        setMode(ModeType.Bound)
-        addFurniureDisclosure.onClose()
-    }
-
-    const roomWidth = parseFloat(
-        distance(
-            { x: roomPositions[0], y: roomPositions[2] },
-            { x: roomPositions[3], y: roomPositions[5] }
-        ).toFixed(3)
-    )
-
-    const roomDepth = parseFloat(
-        distance(
-            { x: roomPositions[6], y: roomPositions[8] },
-            { x: roomPositions[3], y: roomPositions[5] }
-        ).toFixed(3)
-    )
-
-    const roomHeight = parseFloat(Math.abs(roomPositions[13] - 1).toFixed(3))
 
     const handleExportRoom = () => {
         const exporter = new GLTFExporter()
@@ -246,8 +176,33 @@ export const Editor = () => {
 
     const addObjectDisclosure = useDisclosure()
 
-    const handleGroundOnClick = () => {
+    const [objMeta, setObjMeta] = useState<{
+        position: Vector3
+        angle: number
+    }>({ angle: 0, position: new Vector3() })
+
+    const handleGroundOnClick = (objPos: Vector3, angle: number) => {
         addObjectDisclosure.onOpen()
+        setObjMeta({ position: objPos, angle: angle })
+    }
+
+    const placeObject = () => {
+        setGroundIsShown(false)
+        addObjectDisclosure.onClose()
+
+        setObjList([
+            ...objList,
+            {
+                name: objectBound.name,
+                dimension: [
+                    objectBound.width,
+                    objectBound.height,
+                    objectBound.depth,
+                ],
+                position: objMeta.position,
+                angle: objMeta.angle,
+            },
+        ])
     }
 
     return (
@@ -261,7 +216,7 @@ export const Editor = () => {
             >
                 <div className="flex flex-col items-center gap-4">
                     <p className="text-xl font-medium">
-                        Add {objectBound.name} here?
+                        Add &quot;{objectBound.name}&quot; here?
                     </p>
 
                     <div className="flex gap-2">
@@ -272,13 +227,7 @@ export const Editor = () => {
                             No
                         </Button>
 
-                        <Button
-                            variant="primary"
-                            onClick={() => {
-                                setGroundIsShown(false)
-                                addObjectDisclosure.onClose()
-                            }}
-                        >
+                        <Button variant="primary" onClick={placeObject}>
                             Yes
                         </Button>
                     </div>
@@ -394,6 +343,8 @@ export const Editor = () => {
                         <Button onClick={handleExportRoom} variant="non opaque">
                             Export Room
                         </Button>
+
+                        <Button variant="non opaque">Save</Button>
                     </div>
                 </div>
             </SidePanel>
@@ -428,6 +379,17 @@ export const Editor = () => {
                                 positions={w}
                                 groundY={1}
                                 key={`window-${i}`}
+                            />
+                        ))}
+
+                    {objList.length > 0 &&
+                        objList.map((obj) => (
+                            <Object
+                                angle={obj.angle}
+                                name={obj.name}
+                                position={obj.position}
+                                key={`obj-${obj.name}`}
+                                dimension={obj.dimension}
                             />
                         ))}
                 </group>
