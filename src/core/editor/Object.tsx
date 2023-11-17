@@ -9,13 +9,14 @@ interface ObjectInterface {
     position: Vector3
     angle: number
     name: string
+    deleteCallback: (objName: string) => void
 }
 
 const COLOR_SELECT = "#f87171"
 const COLOR_NORMAL = "#94a3b8"
 
-export const Object = (props: ObjectInterface) => {
-    const { angle, name, position, dimension } = props
+export const SelfDefinedObject = (props: ObjectInterface) => {
+    const { angle, name, position, dimension, deleteCallback } = props
 
     const thisMeshRef = useRef<Mesh>(null!)
 
@@ -88,6 +89,13 @@ export const Object = (props: ObjectInterface) => {
                             }}
                         >
                             Copy
+                        </Button>
+
+                        <Button
+                            variant="error"
+                            onClick={() => deleteCallback(name)}
+                        >
+                            Delete
                         </Button>
                     </div>
                 </InfoBoard>

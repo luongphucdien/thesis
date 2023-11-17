@@ -25,7 +25,6 @@ export const Dashboard = () => {
         "projects",
         [
             {
-                floors: [],
                 name: "",
             },
         ]

@@ -33,23 +33,20 @@ interface OnWallObject {
 export interface DoorObject extends OnWallObject {}
 export interface WindowObject extends OnWallObject {}
 
-interface RoomObject {
-    roomRoots: number[]
-    doorRoots: number[][]
-    windowRoots: number[][]
-}
-
 export interface CustomObject {
     name: string
     dimension: [width: number, height: number, depth: number]
     position: Vector3
     angle: number
 }
+interface RoomObject {
+    roomRoots: number[]
+    doorRoots: number[][]
+    windowRoots: number[][]
+    objects: CustomObject[]
+}
 
 export interface ProjectObjects {
     name: string
-    floors?: FloorObject[]
-    floorBuffer?: FloorBufferObject
     room?: RoomObject
-    objects?: CustomObject[]
 }

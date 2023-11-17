@@ -1,8 +1,6 @@
 import { Base, Geometry, Subtraction } from "@react-three/csg"
 import { Billboard, Grid, Line, Text } from "@react-three/drei"
-import { ThreeEvent, useThree } from "@react-three/fiber"
-import { useRef, useState } from "react"
-import { Mesh, Raycaster, Vector2, Vector3 } from "three"
+import { Vector3 } from "three"
 import {
     distance,
     findPointMaxDistance,
@@ -10,103 +8,16 @@ import {
     perpPoints,
     radFromTwoPoints,
 } from "../ARScene/geometryUtils"
-import { ModeType } from "./ModeType"
 
 interface RoomProps {
     positions: number[]
     groundY: number
-    containerRef: React.RefObject<HTMLDivElement>
-    showScales: boolean
-    boundBoxDimen: [width: number, height: number, depth: number]
-    mode: ModeType
 }
 
 const COLOR_TEXT = "#404040"
 
-const Ground = (props: {
-    position: { x: number; y: number }
-    size: [number, number]
-    angle: number
-    groundY: number
-    containerRef: React.RefObject<HTMLDivElement>
-    boundBoxDimen: [width: number, height: number, depth: number]
-}) => {
-    const COLOR_VALID = "#4ade80"
-    const COLOR_INVALID = "#f87171"
-
-    const { angle, position, size, containerRef, groundY, boundBoxDimen } =
-        props
-
-    const highlighter = useRef<Mesh>(null!)
-
-    const { camera, scene } = useThree()
-
-    const mousePos = new Vector2()
-    const raycaster = new Raycaster()
-
-    const handleOnMouseMove = (event: ThreeEvent<PointerEvent>) => {
-        mousePos.x = containerRef.current
-            ? (((event.clientX / window.innerWidth) * 2 - 1) * 100) / 100
-            : 0
-
-        mousePos.y = containerRef.current
-            ? ((-(event.clientY / window.innerHeight) * 2 + 1) * 100) / 100
-            : 0
-
-        raycaster.setFromCamera(mousePos, camera)
-        const intersects = raycaster.intersectObjects(scene.children)
-
-        intersects.forEach((intersect) => {
-            if (intersect.object.name === "valid") {
-                const highlighterPos = new Vector3().copy(intersect.point)
-                highlighter.current.position.set(
-                    highlighterPos.x,
-                    groundY + boundBoxDimen[1] / 2,
-                    highlighterPos.z
-                )
-            }
-        })
-
-        const objName = intersects[1].object.name
-        const floorRegEx = new RegExp("^<floor>:[^ ]+$")
-    }
-
-    const furnitures = useState<{ name: string; mesh: Mesh }[]>([])
-
-    return (
-        <>
-            <mesh
-                position={[position.x, groundY + 0.05, position.y]}
-                rotation={[-Math.PI / 2, 0, -angle]}
-                name="valid"
-                onPointerMove={handleOnMouseMove}
-                receiveShadow
-            >
-                <planeGeometry
-                    args={[
-                        size[0] - boundBoxDimen[0],
-                        size[1] - boundBoxDimen[2],
-                    ]}
-                />
-                <meshStandardMaterial visible={true} color="green" />
-            </mesh>
-
-            <mesh ref={highlighter} rotation={[0, -angle, 0]}>
-                <boxGeometry args={boundBoxDimen} />
-                <meshStandardMaterial
-                    roughness={0}
-                    metalness={0.3}
-                    color={COLOR_VALID}
-                    opacity={0.4}
-                    transparent
-                />
-            </mesh>
-        </>
-    )
-}
-
 export const Room = (props: RoomProps) => {
-    const { positions, groundY, containerRef, boundBoxDimen, mode } = props
+    const { positions, groundY } = props
 
     const roots = {
         A: {
@@ -159,17 +70,6 @@ export const Room = (props: RoomProps) => {
 
                 <meshStandardMaterial roughness={0} metalness={0.3} />
             </mesh>
-
-            {/* {mode === ModeType.Bound && (
-                <Ground
-                    angle={angle}
-                    position={position}
-                    size={[width, depth]}
-                    groundY={groundY}
-                    containerRef={containerRef}
-                    boundBoxDimen={boundBoxDimen}
-                />
-            )} */}
 
             <pointLight
                 position={[position.x, groundY + height + 1, position.y]}
