@@ -1,7 +1,20 @@
+import { Base, Geometry, Subtraction } from "@react-three/csg"
 import { ThreeEvent, useThree } from "@react-three/fiber"
 import { useRef } from "react"
-import { Mesh, Raycaster, Vector2, Vector3 } from "three"
+import {
+    Color,
+    Mesh,
+    MeshStandardMaterial,
+    Raycaster,
+    Vector2,
+    Vector3,
+} from "three"
 import { distance, radFromTwoPoints } from "../ARScene/geometryUtils"
+
+const color = {
+    VALID: "#4ade80",
+    INVALID: "#fb7185",
+}
 
 export const GroundSurface = (props: {
     roomPositions: number[]
@@ -63,7 +76,7 @@ export const GroundSurface = (props: {
         const intersects = raycaster.intersectObjects(scene.children)
 
         intersects.forEach((intersect) => {
-            if (intersect.object.name === "valid") {
+            if (intersect.object.name === "ground") {
                 const highlighterPos = new Vector3().copy(intersect.point)
                 highlighter.current.position.set(
                     highlighterPos.x,
@@ -71,10 +84,17 @@ export const GroundSurface = (props: {
                     highlighterPos.z
                 )
             }
-        })
 
-        const objName = intersects[1].object.name
-        const floorRegEx = new RegExp("^<floor>:[^ ]+$")
+            if (intersect.object.name === "valid") {
+                ;(highlighter.current.material as MeshStandardMaterial).color =
+                    new Color(color.VALID)
+            }
+
+            if (intersect.object.name === "invalid") {
+                ;(highlighter.current.material as MeshStandardMaterial).color =
+                    new Color(color.INVALID)
+            }
+        })
     }
 
     return (
@@ -86,17 +106,57 @@ export const GroundSurface = (props: {
                 onClick={() => {
                     onClick(highlighter.current.position, angle)
                 }}
-                name="valid"
+                name="ground"
             >
                 <planeGeometry args={[width, depth]} />
-                <meshNormalMaterial />
+                <meshStandardMaterial visible={false} />
             </mesh>
+
+            <group>
+                <mesh
+                    position={[position.x, groundY + 0.02, position.y]}
+                    rotation={[-Math.PI / 2, 0, angle]}
+                    name="valid"
+                >
+                    <planeGeometry
+                        args={[width - object.width, depth - object.depth]}
+                    />
+                    <meshStandardMaterial color={color.VALID} />
+                </mesh>
+
+                <mesh
+                    position={[position.x, groundY + 0.02, position.y]}
+                    rotation={[-Math.PI / 2, 0, angle]}
+                    name="invalid"
+                >
+                    <meshStandardMaterial color={color.INVALID} />
+
+                    <Geometry>
+                        <Base scale={1}>
+                            <planeGeometry args={[width, depth]} />
+                        </Base>
+
+                        <Subtraction>
+                            <planeGeometry
+                                args={[
+                                    width - object.width,
+                                    depth - object.depth,
+                                ]}
+                            />
+                        </Subtraction>
+                    </Geometry>
+                </mesh>
+            </group>
 
             <mesh ref={highlighter} rotation={[0, angle, 0]} name={object.name}>
                 <boxGeometry
                     args={[object.width, object.height, object.depth]}
                 />
-                <meshNormalMaterial transparent opacity={0.4} />
+                <meshStandardMaterial
+                    color={color.VALID}
+                    transparent
+                    opacity={0.4}
+                />
             </mesh>
         </>
     )

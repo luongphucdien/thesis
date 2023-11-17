@@ -145,3 +145,13 @@ export const deleteProject = async (name: string, userUID: string) => {
         .delete(`${API_URL}/api/user/${userUID}/project/${name}`)
         .catch((error) => console.log(error))
 }
+
+export const saveCustomObjects = async (
+    name: string,
+    userUID: string,
+    objects: object
+) => {
+    await axios
+        .post(`${API_URL}/api/user/${userUID}/project/${name}/objects`, objects)
+        .catch((error) => console.log(error))
+}

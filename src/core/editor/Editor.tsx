@@ -9,15 +9,14 @@ import { MdOutlineFileDownload } from "react-icons/md"
 import { useNavigate, useParams } from "react-router-dom"
 import { Group, Vector3 } from "three"
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
-import { saveProject } from "../../api"
+import { fetchProjects, saveCustomObjects } from "../../api"
 import { Button } from "../../components/button"
 import { Modal } from "../../components/modal"
 import { useDisclosure } from "../../util/useDisclosure"
 import { useToggle } from "../../util/useToggle"
-import { CustomObject, FloorObject, ProjectObjects } from "../ObjectInterface"
+import { CustomObject, ProjectObjects } from "../ObjectInterface"
 import { GroundSurface } from "./GroundSurface"
-import { ModeType } from "./ModeType"
-import { Object } from "./Object"
+import { SelfDefinedObject } from "./Object"
 import { Door, Window } from "./Openings"
 import { Room, Scales } from "./Room"
 import { SidePanel } from "./SidePanel"
@@ -29,11 +28,7 @@ export const Editor = () => {
 
     const containerRef = useRef<HTMLDivElement>(null)
 
-    const [mode, setMode] = useState(ModeType.Default)
-
     const [projName, setProjName] = useState(params.name!)
-
-    const [floorArray, setFloorArray] = useState<FloorObject[]>([])
 
     const [roomPositions, setRoomPositions] = useState<number[]>([])
     const [doorPositions, setDoorPositions] = useState<number[][]>([])
@@ -43,11 +38,14 @@ export const Editor = () => {
 
     const [dirty, setDirty] = useState(false)
 
-    const [projects, _] = useLocalStorage<ProjectObjects[]>("projects", [
-        {
-            name: "",
-        },
-    ])
+    const [projects, setProjects] = useLocalStorage<ProjectObjects[]>(
+        "projects",
+        [
+            {
+                name: "",
+            },
+        ]
+    )
 
     useEffect(() => {
         projects.forEach((item) => {
@@ -55,7 +53,9 @@ export const Editor = () => {
                 setRoomPositions(item.room!.roomRoots)
                 setDoorPositions(item.room!.doorRoots)
                 setWindowPositions(item.room!.windowRoots)
-                setObjList(item.objects ? item.objects : [])
+                setObjList(item.room!.objects)
+
+                console.log(item.room?.objects)
             }
         })
         document.title = params.name!
@@ -65,39 +65,11 @@ export const Editor = () => {
 
     const [showScales, setShowScales] = useState(true)
 
-    const [boundDimen, setBoundDimen] = useState<{
-        width: number
-        height: number
-        depth: number
-    }>({ width: 0, height: 0, depth: 0 })
-
     const roomRef = useRef<Group>(null!)
 
     const exportRoomDisclosure = useDisclosure()
 
     const roomAsJSON = useRef<string>("")
-
-    const handleOnSaveSuccess = () => {
-        alert("Save successfully!")
-        nav(-1)
-    }
-    const handleOnSaveFailure = () => {
-        alert("Save failed")
-    }
-
-    const handleSave = () => {
-        const thisProject: ProjectObjects = {
-            name: projName,
-            objects: objList,
-        }
-        saveProject(
-            cookies.userUID,
-            thisProject,
-            projName,
-            handleOnSaveSuccess,
-            handleOnSaveFailure
-        )
-    }
 
     const nav = useNavigate()
 
@@ -187,7 +159,7 @@ export const Editor = () => {
     }
 
     const placeObject = () => {
-        setGroundIsShown(false)
+        resetObject()
         addObjectDisclosure.onClose()
 
         setObjList([
@@ -203,6 +175,23 @@ export const Editor = () => {
                 angle: objMeta.angle,
             },
         ])
+    }
+
+    const handleSaveCustomObjects = () => {
+        saveCustomObjects(projName, cookies.userUID, objList).then(() => {
+            alert("Save successfully!")
+            fetchProjects(
+                cookies.userUID,
+                (proj: object) => {
+                    setProjects(proj ? Object.values(proj) : [])
+                },
+                () => {}
+            ).then(() => nav(0))
+        })
+    }
+
+    const handleDeleteObject = (objName: string) => {
+        setObjList(objList.filter((o) => o.name !== objName))
     }
 
     return (
@@ -273,8 +262,6 @@ export const Editor = () => {
                 toggle={sidePanelToggle.toggle}
             >
                 <div className="flex h-full flex-1 flex-col items-center gap-5 overflow-auto bg-indigo-500 p-4">
-                    <p>{`${mode} Mode`}</p>
-
                     <div className="flex w-full flex-col gap-6">
                         <div className="flex gap-2">
                             <label htmlFor="show-scales">Show scales?</label>
@@ -344,7 +331,12 @@ export const Editor = () => {
                             Export Room
                         </Button>
 
-                        <Button variant="non opaque">Save</Button>
+                        <Button
+                            variant="non opaque"
+                            onClick={handleSaveCustomObjects}
+                        >
+                            Save
+                        </Button>
                     </div>
                 </div>
             </SidePanel>
@@ -355,18 +347,7 @@ export const Editor = () => {
                 </mesh>
 
                 <group ref={roomRef}>
-                    <Room
-                        positions={roomPositions}
-                        groundY={1}
-                        containerRef={containerRef}
-                        showScales={showScales}
-                        boundBoxDimen={[
-                            boundDimen.width,
-                            boundDimen.height,
-                            boundDimen.depth,
-                        ]}
-                        mode={mode}
-                    />
+                    <Room positions={roomPositions} groundY={1} />
 
                     {doorPositions !== undefined &&
                         doorPositions.map((d, i) => (
@@ -382,14 +363,21 @@ export const Editor = () => {
                             />
                         ))}
 
-                    {objList.length > 0 &&
+                    {objList !== undefined &&
                         objList.map((obj) => (
-                            <Object
+                            <SelfDefinedObject
                                 angle={obj.angle}
                                 name={obj.name}
-                                position={obj.position}
+                                position={
+                                    new Vector3(
+                                        obj.position.x,
+                                        obj.position.y,
+                                        obj.position.z
+                                    )
+                                }
                                 key={`obj-${obj.name}`}
                                 dimension={obj.dimension}
+                                deleteCallback={handleDeleteObject}
                             />
                         ))}
                 </group>
