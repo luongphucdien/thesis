@@ -12,7 +12,8 @@ import { saveProject } from "../../api"
 import { Button } from "../../components/button"
 import { CoordinateTable } from "../../components/coordinate-table"
 import { TextField } from "../../components/text-field"
-import { PointObject, ProjectObjects } from "../ObjectInterface"
+import { useCalculation } from "../../util/useCalculation"
+import { CustomObject, PointObject, ProjectObjects } from "../ObjectInterface"
 import { Point } from "./Point"
 import {
     distance,
@@ -99,6 +100,8 @@ export const ARScene = () => {
     const navigate = useNavigate()
 
     const handleSave = () => {
+        const objects: CustomObject[] = []
+
         const originalGroundY = localRoomPos[0][1]
         const groundY = 1
 
@@ -224,6 +227,24 @@ export const ARScene = () => {
             tempDoorRoots as { x: number; y: number; z: number }[]
         )
 
+        const groupedDoorRoots = groupRoots(flattenDoorRoots)
+
+        groupedDoorRoots.forEach((dr, i) => {
+            const { angle, height, position, width } = useCalculation(
+                dr,
+                groundY,
+                0
+            )
+
+            objects.push({
+                angle: angle,
+                color: "",
+                dimension: [width, height, 0],
+                name: `obj-door-${i}`,
+                position: position,
+            })
+        })
+
         // =============================== //
 
         const tempWindowRoots = localWindowPos.map((w, i) => {
@@ -295,12 +316,31 @@ export const ARScene = () => {
             tempWindowRoots as { x: number; y: number; z: number }[]
         )
 
+        const groupedWindowRoots = groupRoots(flattenWindowRoots)
+
+        groupedWindowRoots.forEach((wr, i) => {
+            const { angle, height, position, width } = useCalculation(
+                wr,
+                groundY,
+                fixedWindowOffset[i] as number
+            )
+
+            objects.push({
+                angle: angle,
+                color: "",
+                dimension: [width, height, 0],
+                name: `obj-window-${i}`,
+                position: position,
+            })
+        })
+
         const thisProjObjects: ProjectObjects = {
             name: projName,
             room: {
                 roomRoots: flatten(tempRoomRoots),
-                doorRoots: groupRoots(flattenDoorRoots),
-                windowRoots: groupRoots(flattenWindowRoots),
+                // doorRoots: groupRoots(flattenDoorRoots),
+                // windowRoots: groupRoots(flattenWindowRoots),
+                objects: objects,
             },
         }
 

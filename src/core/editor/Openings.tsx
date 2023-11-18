@@ -1,78 +1,60 @@
 import { Addition, Base, Geometry, Subtraction } from "@react-three/csg"
 import { useRef } from "react"
-import { Color, Euler, Mesh, MeshBasicMaterial } from "three"
-import { Button } from "../../components/button"
-import { useToggle } from "../../util/useToggle"
-import { distance, radFromTwoPoints } from "../ARScene/geometryUtils"
-import { InfoBoard } from "./InfoBoard"
+import { Color, Euler, Mesh, MeshBasicMaterial, Vector3 } from "three"
+import { COLOR, CustomObject } from "../ObjectInterface"
 
 interface OpeningProps {
-    positions: number[]
-    groundY: number
-}
-
-const COLOR_SELECT = "#f87171"
-
-const useCalculation = (positions: number[], groundY: number) => {
-    const roots = {
-        A: { x: positions[0], y: positions[2] },
-        B: { x: positions[3], y: positions[5] },
-    }
-
-    const width = distance(roots.A, roots.B)
-    const height = positions[7] - groundY
-
-    const angle = -parseFloat(radFromTwoPoints(roots.A, roots.B).toFixed(3))
-
-    const position = {
-        x: (roots.A.x + roots.B.x) / 2,
-        y: (roots.A.y + roots.B.y) / 2,
-    }
-
-    return { width, height, angle, position }
+    angle: number
+    dimension: [width: number, height: number]
+    position: Vector3
+    color: string
+    onClick: (obj: CustomObject) => void
 }
 
 interface DoorProps extends OpeningProps {}
 
 export const Door = (props: DoorProps) => {
-    const { positions, groundY } = props
+    const { angle, dimension, position, color, onClick } = props
 
-    const { angle, height, position, width } = useCalculation(
-        positions,
-        groundY
-    )
-
-    const color = "#94a3b8"
+    const width = dimension[0]
+    const height = dimension[1]
 
     const ref = useRef<Mesh>(null!)
 
     const handlePointerIn = () => {
         ;(ref.current.material as MeshBasicMaterial).color = new Color(
-            COLOR_SELECT
+            COLOR.SELECT
         )
     }
 
     const handlePointerOut = () => {
-        ;(ref.current.material as MeshBasicMaterial).color = new Color(color)
+        ;(ref.current.material as MeshBasicMaterial).color = new Color(
+            color || COLOR.DEFAULT
+        )
     }
-
-    const infoRef = useRef<HTMLDivElement>(null!)
-    const { state, toggle } = useToggle()
 
     return (
         <>
             <mesh
-                position={[position.x, groundY + height / 2, position.y]}
+                position={new Vector3(position.x, position.y, position.z)}
                 rotation={[0, angle, 0]}
                 onPointerEnter={handlePointerIn}
                 onPointerOut={handlePointerOut}
-                onClick={toggle}
                 ref={ref}
+                onClick={() =>
+                    onClick({
+                        angle: angle,
+                        color: color,
+                        dimension: [...dimension, 0],
+                        name: "",
+                        position: position,
+                    })
+                }
             >
                 <meshStandardMaterial
                     roughness={0}
                     metalness={0.3}
-                    color={color}
+                    color={color || COLOR.DEFAULT}
                 />
                 <Geometry>
                     <Base scale={1}>
@@ -105,88 +87,45 @@ export const Door = (props: DoorProps) => {
                     </Addition>
                 </Geometry>
             </mesh>
-
-            {state && (
-                <InfoBoard onClose={toggle}>
-                    <div
-                        className="flex flex-col gap-2 text-neutral-100"
-                        ref={infoRef}
-                    >
-                        <p>Type: Door</p>
-
-                        <div className="whitespace-nowrap">
-                            <p>Dimension</p>
-                            <p>Width: {width.toFixed(3)}m</p>
-                            <p>Height: {height.toFixed(3)}m</p>
-                            <p>Offset from ground: {0}m</p>
-                        </div>
-
-                        <Button
-                            variant="non opaque"
-                            onClick={() => {
-                                navigator.clipboard.writeText(
-                                    infoRef.current.innerText.replace(
-                                        "Copy",
-                                        ""
-                                    )
-                                )
-                                alert("Copied!")
-                            }}
-                        >
-                            Copy
-                        </Button>
-                    </div>
-                </InfoBoard>
-            )}
         </>
     )
 }
 
 interface WindowProps extends OpeningProps {}
+
 export const Window = (props: WindowProps) => {
-    const { positions, groundY } = props
-    const groundOffset = positions[1]
+    const { angle, color, dimension, position } = props
 
-    const { angle, height, position, width } = useCalculation(
-        positions,
-        groundY
-    )
-
-    const color = "#94a3b8"
+    const width = dimension[0]
+    const height = dimension[1]
 
     const ref = useRef<Mesh>(null!)
 
     const handlePointerIn = () => {
         ;(ref.current.material as MeshBasicMaterial).color = new Color(
-            COLOR_SELECT
+            COLOR.SELECT
         )
     }
 
     const handlePointerOut = () => {
-        ;(ref.current.material as MeshBasicMaterial).color = new Color(color)
+        ;(ref.current.material as MeshBasicMaterial).color = new Color(
+            color || COLOR.DEFAULT
+        )
     }
-
-    const { state, toggle } = useToggle()
-    const infoRef = useRef<HTMLDivElement>(null!)
 
     return (
         <>
             <mesh
-                position={[
-                    position.x,
-                    groundY + groundOffset + height / 2,
-                    position.y,
-                ]}
+                position={new Vector3(position.x, position.y, position.z)}
                 rotation={[0, angle, 0]}
                 ref={ref}
                 onPointerEnter={handlePointerIn}
                 onPointerOut={handlePointerOut}
-                onClick={toggle}
             >
                 <meshStandardMaterial
                     roughness={0}
                     metalness={0.3}
-                    color={color}
+                    color={color || COLOR.DEFAULT}
                 />
                 <Geometry>
                     <Base scale={1}>
@@ -210,39 +149,6 @@ export const Window = (props: WindowProps) => {
                     </Addition>
                 </Geometry>
             </mesh>
-
-            {state && (
-                <InfoBoard onClose={toggle}>
-                    <div
-                        className="flex flex-col gap-2 text-neutral-100"
-                        ref={infoRef}
-                    >
-                        <p>Type: Window</p>
-
-                        <div className="whitespace-nowrap">
-                            <p>Dimension</p>
-                            <p>Width: {width.toFixed(3)}m</p>
-                            <p>Height: {height.toFixed(3)}m</p>
-                            <p>Offset from ground: {groundOffset}m</p>
-                        </div>
-
-                        <Button
-                            variant="non opaque"
-                            onClick={() => {
-                                navigator.clipboard.writeText(
-                                    infoRef.current.innerText.replace(
-                                        "Copy",
-                                        ""
-                                    )
-                                )
-                                alert("Copied!")
-                            }}
-                        >
-                            Copy
-                        </Button>
-                    </div>
-                </InfoBoard>
-            )}
         </>
     )
 }

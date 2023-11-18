@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import { IoMdArrowBack } from "react-icons/io"
-import { MdOutlineFileDownload } from "react-icons/md"
+import { MdClose, MdOutlineFileDownload } from "react-icons/md"
 import { useNavigate, useParams } from "react-router-dom"
 import { Group, Vector3 } from "three"
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
@@ -51,9 +51,9 @@ export const Editor = () => {
         projects.forEach((item) => {
             if (item.name === params.name) {
                 setRoomPositions(item.room!.roomRoots)
-                setDoorPositions(item.room!.doorRoots)
-                setWindowPositions(item.room!.windowRoots)
-                setObjList(item.room!.objects)
+                // setDoorPositions(item.room!.doorRoots)
+                // setWindowPositions(item.room!.windowRoots)
+                setObjList(item.room!.objects || [])
 
                 console.log(item.room?.objects)
             }
@@ -173,6 +173,7 @@ export const Editor = () => {
                 ],
                 position: objMeta.position,
                 angle: objMeta.angle,
+                color: "",
             },
         ])
     }
@@ -192,6 +193,32 @@ export const Editor = () => {
 
     const handleDeleteObject = (objName: string) => {
         setObjList(objList.filter((o) => o.name !== objName))
+    }
+
+    const infoPanelDisclosure = useDisclosure()
+    const infoPanelRef = useRef<HTMLDivElement>(null!)
+    const [selectedObject, setSelectedObject] = useState<CustomObject>({
+        angle: 0,
+        color: "",
+        dimension: [0, 0, 0],
+        name: "",
+        position: new Vector3(),
+    })
+
+    const handleSelectObject = (obj: CustomObject) => {
+        setSelectedObject(obj)
+        infoPanelDisclosure.onOpen()
+    }
+
+    const [newColor, setNewColor] = useState("")
+
+    const handleChangeColor = (objName: string) => {
+        const newObjList = objList.map((o) => {
+            if (o.name === objName) return { ...o, color: newColor }
+            else return o
+        })
+
+        setObjList(newObjList)
     }
 
     return (
@@ -261,6 +288,111 @@ export const Editor = () => {
                 state={sidePanelToggle.state}
                 toggle={sidePanelToggle.toggle}
             >
+                {infoPanelDisclosure.isOpen && (
+                    <div className="absolute right-96 top-20 rounded-xl bg-indigo-500 p-4">
+                        <div className="relative">
+                            <span
+                                className="absolute right-0 top-0 rounded-full p-1 text-neutral-100 transition-all hover:bg-indigo-700 active:bg-indigo-800"
+                                onClick={infoPanelDisclosure.onClose}
+                            >
+                                <IconContext.Provider value={{ size: "24px" }}>
+                                    <MdClose />
+                                </IconContext.Provider>
+                            </span>
+
+                            <div
+                                className="flex flex-col gap-2 text-neutral-100"
+                                ref={infoPanelRef}
+                            >
+                                <p className="whitespace-nowrap">
+                                    Type:{" "}
+                                    {selectedObject.name.includes("door")
+                                        ? "Door"
+                                        : selectedObject.name.includes("window")
+                                        ? "Window"
+                                        : "Object"}
+                                </p>
+
+                                <p>Name: {selectedObject.name}</p>
+
+                                <div className="whitespace-nowrap">
+                                    <p>Dimension</p>
+                                    <p>Width: {selectedObject.dimension[0]}m</p>
+                                    <p>
+                                        Height: {selectedObject.dimension[1]}m
+                                    </p>
+                                    <p>Depth: {selectedObject.dimension[2]}m</p>
+                                </div>
+
+                                <p className="whitespace-nowrap">
+                                    Position:{" "}
+                                    {`[${selectedObject.position.x.toFixed(
+                                        3
+                                    )}, ${selectedObject.position.y.toFixed(
+                                        3
+                                    )}, ${selectedObject.position.z.toFixed(
+                                        3
+                                    )}]`}
+                                </p>
+
+                                <div className="flex flex-col items-center gap-4 whitespace-nowrap rounded-xl border-2 border-indigo-300 p-4">
+                                    <p className="text-lg font-semibold">
+                                        Color:
+                                    </p>
+
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="color"
+                                            defaultValue={selectedObject.color}
+                                            onChange={(e) =>
+                                                setNewColor(e.target.value)
+                                            }
+                                        />
+                                        <p>
+                                            {newColor || selectedObject.color}
+                                        </p>
+                                    </div>
+
+                                    <Button
+                                        variant="non opaque"
+                                        onClick={() =>
+                                            handleChangeColor(
+                                                selectedObject.name
+                                            )
+                                        }
+                                    >
+                                        Change color
+                                    </Button>
+                                </div>
+
+                                <Button
+                                    variant="non opaque"
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(
+                                            infoPanelRef.current.innerText.replace(
+                                                /Copy|Delete|Change color/g,
+                                                ""
+                                            )
+                                        )
+                                        alert("Copied!")
+                                    }}
+                                >
+                                    Copy
+                                </Button>
+
+                                <Button
+                                    variant="error"
+                                    onClick={() =>
+                                        handleDeleteObject(selectedObject.name)
+                                    }
+                                >
+                                    Delete
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex h-full flex-1 flex-col items-center gap-5 overflow-auto bg-indigo-500 p-4">
                     <div className="flex w-full flex-col gap-6">
                         <div className="flex gap-2">
@@ -349,7 +481,7 @@ export const Editor = () => {
                 <group ref={roomRef}>
                     <Room positions={roomPositions} groundY={1} />
 
-                    {doorPositions !== undefined &&
+                    {/* {doorPositions !== undefined &&
                         doorPositions.map((d, i) => (
                             <Door positions={d} groundY={1} key={`door-${i}`} />
                         ))}
@@ -361,25 +493,53 @@ export const Editor = () => {
                                 groundY={1}
                                 key={`window-${i}`}
                             />
-                        ))}
+                        ))} */}
 
                     {objList !== undefined &&
-                        objList.map((obj) => (
-                            <SelfDefinedObject
-                                angle={obj.angle}
-                                name={obj.name}
-                                position={
-                                    new Vector3(
-                                        obj.position.x,
-                                        obj.position.y,
-                                        obj.position.z
-                                    )
-                                }
-                                key={`obj-${obj.name}`}
-                                dimension={obj.dimension}
-                                deleteCallback={handleDeleteObject}
-                            />
-                        ))}
+                        objList.map((obj) =>
+                            obj.name.includes("door") ? (
+                                <Door
+                                    angle={obj.angle}
+                                    dimension={[
+                                        obj.dimension[0],
+                                        obj.dimension[1],
+                                    ]}
+                                    position={obj.position}
+                                    key={obj.name}
+                                    color={obj.color}
+                                    onClick={() => handleSelectObject(obj)}
+                                />
+                            ) : obj.name.includes("window") ? (
+                                <Window
+                                    angle={obj.angle}
+                                    dimension={[
+                                        obj.dimension[0],
+                                        obj.dimension[1],
+                                    ]}
+                                    position={obj.position}
+                                    key={obj.name}
+                                    color={obj.color}
+                                    onClick={() => handleSelectObject(obj)}
+                                />
+                            ) : (
+                                <SelfDefinedObject
+                                    angle={obj.angle}
+                                    name={obj.name}
+                                    position={
+                                        new Vector3(
+                                            obj.position.x,
+                                            obj.position.y,
+                                            obj.position.z
+                                        )
+                                    }
+                                    key={`obj-${obj.name}`}
+                                    dimension={obj.dimension}
+                                    deleteCallback={handleDeleteObject}
+                                    color={obj.color}
+                                    onClick={handleSelectObject}
+                                />
+                            )
+                        )}
                 </group>
 
                 <group>

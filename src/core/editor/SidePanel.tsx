@@ -9,37 +9,6 @@ interface SidePanelProps extends React.PropsWithChildren {
 export const SidePanel = (props: SidePanelProps) => {
     const { state, toggle, children } = props
 
-    // const handleObjectDelete = (objectKey: string) => {
-    //     const objType = objectKey.split(":")[0]
-    //     if (objType === "<floor>") {
-    //         setFloorArray(floorArray.filter((f) => f.key !== objectKey))
-    //     }
-    //     setDirty(!dirty)
-    // }
-
-    // const [objNewName, setObjNewName] = useState("")
-    // const handleNameChange = (objectKey: string, newName: string) => {
-    //     const objType = objectKey.split(":")[0]
-    //     if (objType === "<floor>") {
-    //         const newFloorArray = floorArray.map((f) => {
-    //             if (f.key === objectKey) {
-    //                 return { ...f, name: `<floor>:${newName}` }
-    //             } else {
-    //                 return f
-    //             }
-    //         })
-    //         setFloorArray(newFloorArray)
-    //     }
-    //     setDirty(!dirty)
-    // }
-
-    // const handleSetFloorDimension = () => {
-    //     setFloorDimension({
-    //         width: parseFloat(widthRef.current.value),
-    //         length: parseFloat(lengthRef.current.value),
-    //     })
-    // }
-
     return (
         <div
             className={`pointer-events-auto absolute top-0 z-[999] flex h-full w-80 items-center text-neutral-100 ${
