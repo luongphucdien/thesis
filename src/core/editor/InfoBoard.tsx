@@ -4,12 +4,13 @@ import { MdClose } from "react-icons/md"
 
 interface InfoBoardProps extends React.PropsWithChildren {
     onClose: () => void
+    position: [x: number, y: number, z: number]
 }
 
 export const InfoBoard = (props: InfoBoardProps) => {
-    const { children, onClose } = props
+    const { children, onClose, position } = props
     return (
-        <Billboard>
+        <Billboard position={position}>
             <Html>
                 <div className="relative rounded-xl bg-indigo-600 p-4">
                     <span

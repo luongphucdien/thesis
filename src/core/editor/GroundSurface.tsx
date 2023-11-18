@@ -80,7 +80,7 @@ export const GroundSurface = (props: {
                 const highlighterPos = new Vector3().copy(intersect.point)
                 highlighter.current.position.set(
                     highlighterPos.x,
-                    groundY + 1 / 2,
+                    groundY + object.height / 2,
                     highlighterPos.z
                 )
             }

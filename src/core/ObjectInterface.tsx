@@ -38,15 +38,21 @@ export interface CustomObject {
     dimension: [width: number, height: number, depth: number]
     position: Vector3
     angle: number
+    color: string
 }
 interface RoomObject {
     roomRoots: number[]
-    doorRoots: number[][]
-    windowRoots: number[][]
+    doorRoots?: number[][]
+    windowRoots?: number[][]
     objects: CustomObject[]
 }
 
 export interface ProjectObjects {
     name: string
     room?: RoomObject
+}
+
+export enum COLOR {
+    DEFAULT = "#94a3b8",
+    SELECT = "#f87171",
 }
