@@ -31,8 +31,6 @@ export const Editor = () => {
     const [projName, setProjName] = useState(params.name!)
 
     const [roomPositions, setRoomPositions] = useState<number[]>([])
-    const [doorPositions, setDoorPositions] = useState<number[][]>([])
-    const [windowPositions, setWindowPositions] = useState<number[][]>([])
 
     const [objList, setObjList] = useState<CustomObject[]>([])
 
@@ -506,8 +504,9 @@ export const Editor = () => {
                                     ]}
                                     position={obj.position}
                                     key={obj.name}
+                                    name={obj.name}
                                     color={obj.color}
-                                    onClick={() => handleSelectObject(obj)}
+                                    onClick={handleSelectObject}
                                 />
                             ) : obj.name.includes("window") ? (
                                 <Window
@@ -518,8 +517,9 @@ export const Editor = () => {
                                     ]}
                                     position={obj.position}
                                     key={obj.name}
+                                    name={obj.name}
                                     color={obj.color}
-                                    onClick={() => handleSelectObject(obj)}
+                                    onClick={handleSelectObject}
                                 />
                             ) : (
                                 <SelfDefinedObject
@@ -534,7 +534,6 @@ export const Editor = () => {
                                     }
                                     key={`obj-${obj.name}`}
                                     dimension={obj.dimension}
-                                    deleteCallback={handleDeleteObject}
                                     color={obj.color}
                                     onClick={handleSelectObject}
                                 />
