@@ -9,12 +9,13 @@ interface OpeningProps {
     position: Vector3
     color: string
     onClick: (obj: CustomObject) => void
+    name: string
 }
 
 interface DoorProps extends OpeningProps {}
 
 export const Door = (props: DoorProps) => {
-    const { angle, dimension, position, color, onClick } = props
+    const { angle, dimension, position, color, onClick, name } = props
 
     const width = dimension[0]
     const height = dimension[1]
@@ -41,15 +42,16 @@ export const Door = (props: DoorProps) => {
                 onPointerEnter={handlePointerIn}
                 onPointerOut={handlePointerOut}
                 ref={ref}
-                onClick={() =>
+                onClick={(e) => {
                     onClick({
                         angle: angle,
-                        color: color,
+                        color: color || COLOR.DEFAULT,
                         dimension: [...dimension, 0],
-                        name: "",
+                        name: name,
                         position: position,
                     })
-                }
+                    e.stopPropagation()
+                }}
             >
                 <meshStandardMaterial
                     roughness={0}
@@ -94,7 +96,7 @@ export const Door = (props: DoorProps) => {
 interface WindowProps extends OpeningProps {}
 
 export const Window = (props: WindowProps) => {
-    const { angle, color, dimension, position } = props
+    const { angle, color, dimension, position, onClick, name } = props
 
     const width = dimension[0]
     const height = dimension[1]
@@ -121,6 +123,16 @@ export const Window = (props: WindowProps) => {
                 ref={ref}
                 onPointerEnter={handlePointerIn}
                 onPointerOut={handlePointerOut}
+                onClick={(e) => {
+                    onClick({
+                        angle: angle,
+                        color: color || COLOR.DEFAULT,
+                        dimension: [...dimension, 0],
+                        name: name,
+                        position: position,
+                    })
+                    e.stopPropagation()
+                }}
             >
                 <meshStandardMaterial
                     roughness={0}
