@@ -29,12 +29,14 @@ export const checkIfEmailExisted = async (
 }
 
 export const signUp = async (
-    email: string,
-    password: string,
+    signUpInfo: {email: string, password: string},
     setSignUpState: (state: boolean) => void,
     onSuccessCallback: () => void,
-    onErrorCallback: () => void
+    onErrorCallback: (errorCode: string) => void
 ) => {
+    const email = signUpInfo.email
+    const password = signUpInfo.password
+
     const _base64Email = Buffer.from(email).toString("base64")
 
     await axios
@@ -49,22 +51,22 @@ export const signUp = async (
                 onSuccessCallback()
             } else {
                 setSignUpState(false)
-                onErrorCallback()
+                onErrorCallback(res.data.errorCode)
             }
-            console.log(res.data)
         })
         .catch(() => {
             setSignUpState(false)
-            onErrorCallback()
+            onErrorCallback("")
         })
 }
 
 export const signIn = async (
-    email: string,
-    password: string,
+    signInInfo: {email: string, password: string},
     onSuccessCallback: (token: string, userUID: string) => void,
-    onErrorCallback: () => void
+    onErrorCallback: (errorCode: string) => void
 ) => {
+    const email = signInInfo.email
+    const password = signInInfo.password
     const _base64Email = Buffer.from(email).toString("base64")
 
     await axios
@@ -77,20 +79,11 @@ export const signIn = async (
             if (res.data.code === HttpStatusCode.Ok) {
                 onSuccessCallback(res.data.userToken, _base64Email)
             } else {
-                onErrorCallback()
+                onErrorCallback(res.data.code)
             }
-
-            console.log({
-                data: res.data,
-                sourceData: {
-                    email: email,
-                    pw: password,
-                    base64Email: _base64Email,
-                },
-            })
         })
         .catch((err) => {
-            onErrorCallback()
+            onErrorCallback("")
             console.log(err)
         })
 }

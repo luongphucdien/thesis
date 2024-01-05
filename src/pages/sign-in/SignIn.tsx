@@ -1,19 +1,23 @@
 import { useState } from "react"
 import { useCookies } from "react-cookie"
-import { useNavigate } from "react-router-dom"
+import { IconContext } from "react-icons"
+import { TbAugmentedReality } from "react-icons/tb"
+import { Link, useNavigate } from "react-router-dom"
 import { signIn } from "../../api"
 import { Button } from "../../components/button"
 import { FormControl } from "../../components/form-control"
 import { TextField } from "../../components/text-field"
 
 export const SignIn = () => {
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
+    const [signInInfo, setSignInInfo] = useState<{email: string, password: string}>({
+        email: "",
+        password: ""
+    })
     const [signInDisabler, setSignInDisabler] = useState(false)
 
     const handleSignIn = () => {
         setSignInDisabler(true)
-        signIn(email, password, signInSuccess, signInError)
+        signIn(signInInfo, signInSuccess, signInError)
     }
 
     const [cookies, setCookies] = useCookies(["userToken", "userUID"])
@@ -29,40 +33,49 @@ export const SignIn = () => {
         nav(0)
     }
 
-    const signInError = () => {
-        alert("Sign in error")
-        nav(0)
+    const signInError = (errorCode: string) => {
+        if (errorCode === "auth/invalid-email")
+            alert("Email is invalid!\nPlease check your email again.")
+        else if (errorCode === "auth/invalid-login-credentials")
+            alert("Sign in error!\nEither your password is incorrect, or the email has not yet registered.\nPlease try again.")
+        else
+            alert("Sign in error!\nPlease try again.")
+        setSignInDisabler(false)
+        console.log(errorCode)
     }
 
     return (
-        <div className="flex h-full items-center justify-center px-2 sm:px-96">
-            <div className="flex w-full flex-col items-center justify-center gap-6 rounded-xl bg-indigo-600 py-14 text-neutral-100">
-                <FormControl id="email">
-                    <FormControl.Label>Email</FormControl.Label>
-                    <TextField
-                        onChange={(event) => setEmail(event.target.value)}
-                    />
-                </FormControl>
+        <div className="h-full w-full flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center gap-10">
+                <IconContext.Provider value={{size: "52px"}}>
+                    <a className="text-indigo-600"><TbAugmentedReality /></a>
+                </IconContext.Provider>
 
-                <FormControl>
-                    <FormControl.Label>Password</FormControl.Label>
-                    <TextField
-                        type="password"
-                        onChange={(event) => setPassword(event.target.value)}
-                    />
-                </FormControl>
+                <div className="text-center gap-2 flex flex-col">
+                    <p className="font-semibold text-3xl">Welcome to FloorPlannerAR</p>
+                    <p className="text-2xl">Let&apos;s get you started!</p>
+                </div>
+                
+                <div className="flex flex-col gap-6 w-full">
+                    <FormControl>
+                        <FormControl.Label htmlFor="email">Email</FormControl.Label>
+                        <TextField id="email" onChange={e => setSignInInfo({...signInInfo, email: e.target.value})}/>
+                    </FormControl>
 
-                <div>
-                    <Button
-                        variant="non opaque"
-                        onClick={handleSignIn}
-                        disabled={
-                            signInDisabler || (email && password ? false : true)
-                        }
+                    <FormControl>
+                        <FormControl.Label>Password</FormControl.Label>
+                        <TextField type="password" onChange={e => setSignInInfo({...signInInfo, password: e.target.value})}/>
+                    </FormControl>
+
+                    <Button 
+                        onClick={handleSignIn} 
+                        disabled={signInDisabler || (signInInfo.email && signInInfo.password ? false : true)}
                     >
                         Sign In
                     </Button>
                 </div>
+
+                <p>Not a user? <Link to={"/sign-up"} className="text-indigo-600">Sign up here!</Link></p>
             </div>
         </div>
     )
