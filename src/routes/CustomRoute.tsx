@@ -2,7 +2,6 @@ import { Route, Routes } from "react-router-dom"
 import { ARScene } from "../core/ARScene"
 import { Editor } from "../core/editor"
 import { Dashboard } from "../pages/dashboard"
-import { Home } from "../pages/home"
 import { SignIn } from "../pages/sign-in"
 import { SignUp } from "../pages/sign-up"
 import { Page } from "./Page"
@@ -16,8 +15,8 @@ export const CustomRoute = () => {
                 path="/"
                 element={
                     <PublicPage>
-                        <Page title="Home">
-                            <Home />
+                        <Page title="Sign In">
+                            <SignIn />
                         </Page>
                     </PublicPage>
                 }

@@ -1,15 +1,15 @@
 {
     "eslint.validate": [
-      "javascript",
-      "javascriptreact",
-      "typescript",
-      "typescriptreact"
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact"
     ],
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true,
-      "source.organizeImports": true,
-      "source.addMissingImports": true
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit",
+        "source.addMissingImports": "explicit"
     },
-    "editor.wordWrap": "on",
-  }
-  
+    "editor.formatOnSave": true,
+    "editor.wordWrap": "on"
+}
