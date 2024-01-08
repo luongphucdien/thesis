@@ -19,8 +19,8 @@
     "plugins": [
         "@typescript-eslint",
         "react",
-        "prettier",
-        "json-format"
+        "json-format",
+        "prettier"
     ],
     "rules": {
         "quotes": ["warn", "double"],
@@ -36,6 +36,12 @@
         "@typescript-eslint/no-explicit-any": "off",
         "no-unused-vars": "off",
         "react/no-unknown-property": "off",
-        "prettier/prettier": "off"
+        "prettier/prettier": [
+            "warn",
+            {
+                "tabWidth": 4,
+                "endOfLine": "auto"
+            }
+        ]
     }
 }
