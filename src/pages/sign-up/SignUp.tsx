@@ -63,7 +63,7 @@ export const SignUp = () => {
 
     return (
         <div className="flex h-full w-full flex-col items-center justify-center">
-            <div className="flex flex-col items-center gap-10">
+            <div className="flex flex-col items-center gap-10 px-10 sm:px-0">
                 <FadeIn>
                     <IconContext.Provider value={{ size: "52px" }}>
                         <a className="text-indigo-500">
