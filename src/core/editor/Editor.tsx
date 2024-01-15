@@ -1,7 +1,7 @@
 import { Environment, OrbitControls } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import { useLocalStorage } from "@uidotdev/usehooks"
-import { useEffect, useRef, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import { IoMdArrowBack } from "react-icons/io"
@@ -49,8 +49,6 @@ export const Editor = () => {
         projects.forEach((item) => {
             if (item.name === params.name) {
                 setRoomPositions(item.room!.roomRoots)
-                // setDoorPositions(item.room!.doorRoots)
-                // setWindowPositions(item.room!.windowRoots)
                 setObjList(item.room!.objects || [])
 
                 console.log(item.room?.objects)
@@ -90,17 +88,20 @@ export const Editor = () => {
     const objectHeight = useRef<HTMLInputElement>(null!)
     const objectDepth = useRef<HTMLInputElement>(null!)
     const objectName = useRef<HTMLInputElement>(null!)
+    const [objectRotation, setObjectRotation] = useState("")
 
     const [objectBound, setObjectBound] = useState<{
         width: number
         height: number
         depth: number
         name: string
+        rotation: number
     }>({
         name: "",
         depth: 0,
         height: 0,
         width: 0,
+        rotation: 0,
     })
 
     const [groundIsShown, setGroundIsShown] = useState<boolean>(false)
@@ -114,6 +115,8 @@ export const Editor = () => {
 
         const name = objectName.current.value
 
+        const rotation = (parseInt(objectRotation) * Math.PI) / 180
+
         if (width > 0 && height > 0 && depth > 0 && name.length > 0) {
             setGroundIsShown(true)
 
@@ -122,6 +125,7 @@ export const Editor = () => {
                 height: height,
                 depth: depth,
                 name: name,
+                rotation: rotation,
             })
         } else {
             alert("All the fields must not be empty")
@@ -134,12 +138,14 @@ export const Editor = () => {
             depth: 0,
             height: 0,
             name: "",
+            rotation: 0,
         })
 
         objectWidth.current.value = ""
         objectHeight.current.value = ""
         objectDepth.current.value = ""
         objectName.current.value = ""
+        setObjectRotation("0")
 
         setGroundIsShown(false)
     }
@@ -171,6 +177,7 @@ export const Editor = () => {
                 ],
                 position: objMeta.position,
                 angle: objMeta.angle,
+                rotation: objectBound.rotation,
                 color: "",
             },
         ])
@@ -201,6 +208,7 @@ export const Editor = () => {
         dimension: [0, 0, 0],
         name: "",
         position: new Vector3(),
+        rotation: 0,
     })
 
     const handleSelectObject = (obj: CustomObject) => {
@@ -333,6 +341,11 @@ export const Editor = () => {
                                     )}]`}
                                 </p>
 
+                                <p>
+                                    Rotation:{" "}
+                                    {(selectedObject.rotation * 180) / Math.PI}
+                                </p>
+
                                 <div className="flex flex-col items-center gap-4 whitespace-nowrap rounded-xl border-2 border-indigo-300 p-4">
                                     <p className="text-lg font-semibold">
                                         Color:
@@ -445,6 +458,18 @@ export const Editor = () => {
                                 </tr>
                             </table>
 
+                            <div>
+                                <p>Rotation: {objectRotation}</p>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={360}
+                                    onChange={(e) =>
+                                        setObjectRotation(e.target.value)
+                                    }
+                                />
+                            </div>
+
                             <Button
                                 variant="non opaque"
                                 onClick={handleAddObject}
@@ -471,103 +496,97 @@ export const Editor = () => {
                 </div>
             </SidePanel>
 
-            <Canvas camera={{ position: [3, 7, 3] }} shadows>
-                <mesh visible={dirty} position={[1000, 1000, 1000]}>
-                    <boxGeometry />
-                </mesh>
+            <Suspense
+                fallback={
+                    <div className="z-[999] flex h-full w-full items-center justify-center text-4xl">
+                        Loading
+                    </div>
+                }
+            >
+                <Canvas camera={{ position: [3, 7, 3] }} shadows>
+                    <mesh visible={dirty} position={[1000, 1000, 1000]}>
+                        <boxGeometry />
+                    </mesh>
 
-                <group ref={roomRef}>
-                    <Room positions={roomPositions} groundY={1} />
+                    <group ref={roomRef}>
+                        <Room positions={roomPositions} groundY={1} />
 
-                    {/* {doorPositions !== undefined &&
-                        doorPositions.map((d, i) => (
-                            <Door positions={d} groundY={1} key={`door-${i}`} />
-                        ))}
+                        {objList !== undefined &&
+                            objList.map((obj) =>
+                                obj.name.includes("door") ? (
+                                    <Door
+                                        angle={obj.angle}
+                                        dimension={[
+                                            obj.dimension[0],
+                                            obj.dimension[1],
+                                        ]}
+                                        position={obj.position}
+                                        key={obj.name}
+                                        name={obj.name}
+                                        color={obj.color}
+                                        onClick={handleSelectObject}
+                                    />
+                                ) : obj.name.includes("window") ? (
+                                    <Window
+                                        angle={obj.angle}
+                                        dimension={[
+                                            obj.dimension[0],
+                                            obj.dimension[1],
+                                        ]}
+                                        position={obj.position}
+                                        key={obj.name}
+                                        name={obj.name}
+                                        color={obj.color}
+                                        onClick={handleSelectObject}
+                                    />
+                                ) : (
+                                    <SelfDefinedObject
+                                        angle={obj.angle}
+                                        name={obj.name}
+                                        position={
+                                            new Vector3(
+                                                obj.position.x,
+                                                obj.position.y,
+                                                obj.position.z
+                                            )
+                                        }
+                                        key={`obj-${obj.name}`}
+                                        dimension={obj.dimension}
+                                        color={obj.color}
+                                        onClick={handleSelectObject}
+                                        rotation={obj.rotation}
+                                    />
+                                )
+                            )}
+                    </group>
 
-                    {windowPositions !== undefined &&
-                        windowPositions.map((w, i) => (
-                            <Window
-                                positions={w}
-                                groundY={1}
-                                key={`window-${i}`}
-                            />
-                        ))} */}
-
-                    {objList !== undefined &&
-                        objList.map((obj) =>
-                            obj.name.includes("door") ? (
-                                <Door
-                                    angle={obj.angle}
-                                    dimension={[
-                                        obj.dimension[0],
-                                        obj.dimension[1],
-                                    ]}
-                                    position={obj.position}
-                                    key={obj.name}
-                                    name={obj.name}
-                                    color={obj.color}
-                                    onClick={handleSelectObject}
-                                />
-                            ) : obj.name.includes("window") ? (
-                                <Window
-                                    angle={obj.angle}
-                                    dimension={[
-                                        obj.dimension[0],
-                                        obj.dimension[1],
-                                    ]}
-                                    position={obj.position}
-                                    key={obj.name}
-                                    name={obj.name}
-                                    color={obj.color}
-                                    onClick={handleSelectObject}
-                                />
-                            ) : (
-                                <SelfDefinedObject
-                                    angle={obj.angle}
-                                    name={obj.name}
-                                    position={
-                                        new Vector3(
-                                            obj.position.x,
-                                            obj.position.y,
-                                            obj.position.z
-                                        )
-                                    }
-                                    key={`obj-${obj.name}`}
-                                    dimension={obj.dimension}
-                                    color={obj.color}
-                                    onClick={handleSelectObject}
-                                />
-                            )
-                        )}
-                </group>
-
-                <group>
-                    <Scales
-                        groundY={1}
-                        positions={roomPositions}
-                        showScales={showScales}
-                    />
-                </group>
-
-                {groundIsShown && (
                     <group>
-                        <GroundSurface
-                            roomPositions={roomPositions}
-                            containerRef={containerRef}
+                        <Scales
                             groundY={1}
-                            object={objectBound}
-                            onClick={handleGroundOnClick}
+                            positions={roomPositions}
+                            showScales={showScales}
                         />
                     </group>
-                )}
 
-                <OrbitControls />
-                {/* <axesHelper args={[100]} position={[0, 1, 0]} /> */}
+                    {groundIsShown && (
+                        <group>
+                            <GroundSurface
+                                roomPositions={roomPositions}
+                                containerRef={containerRef}
+                                groundY={1}
+                                object={objectBound}
+                                onClick={handleGroundOnClick}
+                            />
+                        </group>
+                    )}
 
-                <ambientLight intensity={1} color={"white"} />
+                    <OrbitControls />
 
-                <Environment preset="apartment" blur={0.1} background />
-            </Canvas>
+                    <ambientLight intensity={1} color={"white"} />
+
+                    <Environment preset="apartment" blur={0.1} background />
+                </Canvas>
+            </Suspense>
         </div>
     )
 }

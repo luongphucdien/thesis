@@ -25,6 +25,7 @@ export const GroundSurface = (props: {
         height: number
         depth: number
         name: string
+        rotation: number
     }
     onClick: (objPos: Vector3, angle: number) => void
 }) => {
@@ -148,7 +149,11 @@ export const GroundSurface = (props: {
                 </mesh>
             </group>
 
-            <mesh ref={highlighter} rotation={[0, angle, 0]} name={object.name}>
+            <mesh
+                ref={highlighter}
+                rotation={[0, angle + object.rotation, 0]}
+                name={object.name}
+            >
                 <boxGeometry
                     args={[object.width, object.height, object.depth]}
                 />
