@@ -29,7 +29,7 @@ export const checkIfEmailExisted = async (
 }
 
 export const signUp = async (
-    signUpInfo: {email: string, password: string},
+    signUpInfo: { email: string; password: string },
     setSignUpState: (state: boolean) => void,
     onSuccessCallback: () => void,
     onErrorCallback: (errorCode: string) => void
@@ -61,7 +61,7 @@ export const signUp = async (
 }
 
 export const signIn = async (
-    signInInfo: {email: string, password: string},
+    signInInfo: { email: string; password: string },
     onSuccessCallback: (token: string, userUID: string) => void,
     onErrorCallback: (errorCode: string) => void
 ) => {
@@ -146,5 +146,11 @@ export const saveCustomObjects = async (
 ) => {
     await axios
         .post(`${API_URL}/api/user/${userUID}/project/${name}/objects`, objects)
+        .catch((error) => console.log(error))
+}
+
+export const uploadCustomObject = async (userUID: string, model: File) => {
+    await axios
+        .post(`${API_URL}/api/user/${userUID}/models`, model)
         .catch((error) => console.log(error))
 }

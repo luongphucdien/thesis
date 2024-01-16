@@ -5,11 +5,15 @@ import { Suspense, useEffect, useRef, useState } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import { IoMdArrowBack } from "react-icons/io"
-import { MdClose, MdOutlineFileDownload } from "react-icons/md"
+import {
+    MdClose,
+    MdOutlineFileDownload,
+    MdOutlineFileUpload,
+} from "react-icons/md"
 import { useNavigate, useParams } from "react-router-dom"
 import { Group, Vector3 } from "three"
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
-import { fetchProjects, saveCustomObjects } from "../../api"
+import { fetchProjects, saveCustomObjects, uploadCustomObject } from "../../api"
 import { Button } from "../../components/button"
 import { Modal } from "../../components/modal"
 import { useDisclosure } from "../../util/useDisclosure"
@@ -227,6 +231,24 @@ export const Editor = () => {
         setObjList(newObjList)
     }
 
+    const importModal = useDisclosure()
+
+    const [customObj, setCustomObj] = useState<File | null>(null)
+
+    const handleImportObj = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setCustomObj(e.target.files[0])
+        }
+    }
+
+    const resetImportObj = () => {
+        setCustomObj(null)
+    }
+
+    const uploadModel = () => {
+        uploadCustomObject(cookies.userUID, customObj!)
+    }
+
     return (
         <div
             className="relative h-[100vh] w-[100vw] overflow-hidden"
@@ -275,6 +297,51 @@ export const Editor = () => {
                         </span>
                         Download as GLTF
                     </a>
+                </div>
+            </Modal>
+
+            <Modal isOpen={importModal.isOpen} onClose={importModal.onClose}>
+                <div>
+                    {!customObj && (
+                        <div>
+                            <label htmlFor="obj-uploader" className="">
+                                <a className="inline-flex cursor-pointer flex-col items-center">
+                                    <IconContext.Provider
+                                        value={{ size: "48px" }}
+                                    >
+                                        <MdOutlineFileUpload />
+                                    </IconContext.Provider>
+                                    Upload your model here
+                                </a>
+                            </label>
+                            <input
+                                type="file"
+                                id="obj-uploader"
+                                className="hidden"
+                                onChange={handleImportObj}
+                            />
+                        </div>
+                    )}
+
+                    {customObj && (
+                        <div>
+                            <p>Name: {customObj.name}</p>
+                            <p>Type: {customObj.type}</p>
+                            <p>Size: {customObj.size}</p>
+
+                            <div className="flex flex-row-reverse gap-4 whitespace-nowrap">
+                                <Button variant="primary" onClick={uploadModel}>
+                                    Upload
+                                </Button>
+                                <Button
+                                    variant="error"
+                                    onClick={resetImportObj}
+                                >
+                                    Change Model
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </Modal>
 
@@ -405,7 +472,7 @@ export const Editor = () => {
                 )}
 
                 <div className="flex h-full flex-1 flex-col items-center gap-5 overflow-auto bg-indigo-500 p-4">
-                    <div className="flex w-full flex-col gap-6">
+                    <div className="flex h-full w-full flex-col gap-6">
                         <div className="flex gap-2">
                             <label htmlFor="show-scales">Show scales?</label>
                             <input
@@ -482,16 +549,30 @@ export const Editor = () => {
                             </Button>
                         </div>
 
-                        <Button onClick={handleExportRoom} variant="non opaque">
-                            Export Room
-                        </Button>
+                        <div className="flex-1">
+                            <Button
+                                variant="non opaque"
+                                onClick={importModal.onOpen}
+                            >
+                                Import Custom Object
+                            </Button>
+                        </div>
 
-                        <Button
-                            variant="non opaque"
-                            onClick={handleSaveCustomObjects}
-                        >
-                            Save
-                        </Button>
+                        <div className="flex flex-col gap-4">
+                            <Button
+                                onClick={handleExportRoom}
+                                variant="non opaque"
+                            >
+                                Export Room
+                            </Button>
+
+                            <Button
+                                variant="non opaque"
+                                onClick={handleSaveCustomObjects}
+                            >
+                                Save
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </SidePanel>
