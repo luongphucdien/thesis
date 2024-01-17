@@ -21,7 +21,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
-    "@types/three": "^0.156.0",
+    "@types/three": "^0.160.0",
     "@typescript-eslint/eslint-plugin": "^6.6.0",
     "@typescript-eslint/parser": "^6.6.0",
     "@uidotdev/usehooks": "^2.4.0",

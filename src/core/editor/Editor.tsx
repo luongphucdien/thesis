@@ -16,9 +16,11 @@ import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
 import { fetchProjects, saveCustomObjects, uploadCustomObject } from "../../api"
 import { Button } from "../../components/button"
 import { Modal } from "../../components/modal"
+import { TextField } from "../../components/text-field"
 import { useDisclosure } from "../../util/useDisclosure"
 import { useToggle } from "../../util/useToggle"
 import { CustomObject, ProjectObjects } from "../ObjectInterface"
+import { CustomModelPreview } from "./CustomModelPreview"
 import { GroundSurface } from "./GroundSurface"
 import { SelfDefinedObject } from "./Object"
 import { Door, Window } from "./Openings"
@@ -319,11 +321,12 @@ export const Editor = () => {
                                 id="obj-uploader"
                                 className="hidden"
                                 onChange={handleImportObj}
+                                accept=".glb"
                             />
                         </div>
                     )}
 
-                    {customObj && (
+                    {/* {customObj && (
                         <div>
                             <p>Name: {customObj.name}</p>
                             <p>Type: {customObj.type}</p>
@@ -339,6 +342,46 @@ export const Editor = () => {
                                 >
                                     Change Model
                                 </Button>
+                            </div>
+                        </div>
+                    )} */}
+
+                    {customObj && (
+                        <div className="h-[50vh] w-[50vw] overflow-hidden">
+                            <div className="flex h-full gap-8">
+                                <Canvas>
+                                    <CustomModelPreview rawFile={customObj} />
+                                    <Environment
+                                        preset="apartment"
+                                        blur={0.1}
+                                        background
+                                    />
+                                    <OrbitControls />
+                                </Canvas>
+
+                                <div className="flex flex-col justify-between whitespace-nowrap">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <label
+                                            className="text-center"
+                                            htmlFor="model-name"
+                                        >
+                                            Model Name
+                                        </label>
+                                        <TextField id="model-name" />
+                                    </div>
+
+                                    <div className="flex flex-col gap-4">
+                                        <Button
+                                            variant="error"
+                                            onClick={resetImportObj}
+                                        >
+                                            Change Model
+                                        </Button>
+                                        <Button onClick={uploadModel}>
+                                            Upload
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
