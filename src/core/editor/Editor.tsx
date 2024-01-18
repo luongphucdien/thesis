@@ -16,7 +16,6 @@ import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
 import { fetchProjects, saveCustomObjects, uploadCustomObject } from "../../api"
 import { Button } from "../../components/button"
 import { Modal } from "../../components/modal"
-import { TextField } from "../../components/text-field"
 import { useDisclosure } from "../../util/useDisclosure"
 import { useToggle } from "../../util/useToggle"
 import { CustomObject, ProjectObjects } from "../ObjectInterface"
@@ -236,6 +235,7 @@ export const Editor = () => {
     const importModal = useDisclosure()
 
     const [customObj, setCustomObj] = useState<File | null>(null)
+    const modelNameRef = useRef<HTMLInputElement>(null!)
 
     const handleImportObj = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -248,8 +248,21 @@ export const Editor = () => {
     }
 
     const uploadModel = () => {
-        uploadCustomObject(cookies.userUID, customObj!)
+        if (modelNameRef.current.value === "") {
+            alert("Please provide the name of your model")
+        } else {
+            uploadCustomObject(
+                cookies.userUID,
+                customObj!,
+                modelNameRef.current.value
+            ).then(() => {
+                alert("Upload Successfully!")
+                nav(0)
+            })
+        }
     }
+
+    const modelLibDisclosure = useDisclosure()
 
     return (
         <div
@@ -326,26 +339,6 @@ export const Editor = () => {
                         </div>
                     )}
 
-                    {/* {customObj && (
-                        <div>
-                            <p>Name: {customObj.name}</p>
-                            <p>Type: {customObj.type}</p>
-                            <p>Size: {customObj.size}</p>
-
-                            <div className="flex flex-row-reverse gap-4 whitespace-nowrap">
-                                <Button variant="primary" onClick={uploadModel}>
-                                    Upload
-                                </Button>
-                                <Button
-                                    variant="error"
-                                    onClick={resetImportObj}
-                                >
-                                    Change Model
-                                </Button>
-                            </div>
-                        </div>
-                    )} */}
-
                     {customObj && (
                         <div className="h-[50vh] w-[50vw] overflow-hidden">
                             <div className="flex h-full gap-8">
@@ -367,7 +360,10 @@ export const Editor = () => {
                                         >
                                             Model Name
                                         </label>
-                                        <TextField id="model-name" />
+                                        <input
+                                            id="model-name"
+                                            ref={modelNameRef}
+                                        />
                                     </div>
 
                                     <div className="flex flex-col gap-4">
@@ -386,6 +382,13 @@ export const Editor = () => {
                         </div>
                     )}
                 </div>
+            </Modal>
+
+            <Modal
+                isOpen={modelLibDisclosure.isOpen}
+                onClose={modelLibDisclosure.onClose}
+            >
+                <div>Model Lib</div>
             </Modal>
 
             <div className="fixed left-0 top-0 z-[999] flex h-12 w-full items-center gap-5 bg-indigo-600 px-2 text-neutral-100">
@@ -592,12 +595,19 @@ export const Editor = () => {
                             </Button>
                         </div>
 
-                        <div className="flex-1">
+                        <div className="flex flex-1 flex-col gap-4">
                             <Button
                                 variant="non opaque"
                                 onClick={importModal.onOpen}
                             >
                                 Import Custom Object
+                            </Button>
+
+                            <Button
+                                variant="non opaque"
+                                onClick={modelLibDisclosure.onOpen}
+                            >
+                                Your Model Library
                             </Button>
                         </div>
 

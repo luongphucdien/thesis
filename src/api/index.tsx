@@ -149,8 +149,15 @@ export const saveCustomObjects = async (
         .catch((error) => console.log(error))
 }
 
-export const uploadCustomObject = async (userUID: string, model: File) => {
+export const uploadCustomObject = async (
+    userUID: string,
+    model: File,
+    modelName: string
+) => {
     await axios
-        .post(`${API_URL}/api/user/${userUID}/models`, model)
+        .post(`${API_URL}/api/user/${userUID}/models`, {
+            model: model,
+            modelName: modelName,
+        })
         .catch((error) => console.log(error))
 }
