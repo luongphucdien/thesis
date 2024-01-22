@@ -15,7 +15,9 @@ import { Group, Vector3 } from "three"
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
 import { fetchProjects, saveCustomObjects, uploadCustomObject } from "../../api"
 import { Button } from "../../components/button"
+import { ModelLibrary } from "../../components/composites/model-library"
 import { Modal } from "../../components/modal"
+import { Slot } from "../../components/slot"
 import { useDisclosure } from "../../util/useDisclosure"
 import { useToggle } from "../../util/useToggle"
 import { CustomObject, ProjectObjects } from "../ObjectInterface"
@@ -384,12 +386,64 @@ export const Editor = () => {
                 </div>
             </Modal>
 
-            <Modal
+            <ModelLibrary
                 isOpen={modelLibDisclosure.isOpen}
                 onClose={modelLibDisclosure.onClose}
             >
-                <div>Model Lib</div>
-            </Modal>
+                <Slot>
+                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
+                        <p>model</p>
+                    </div>
+                </Slot>
+
+                <Slot>
+                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
+                        <p>model</p>
+                    </div>
+                </Slot>
+
+                <Slot>
+                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
+                        <p>model</p>
+                    </div>
+                </Slot>
+
+                <Slot>
+                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
+                        <p>model</p>
+                    </div>
+                </Slot>
+
+                <Slot>
+                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
+                        <p>model</p>
+                    </div>
+                </Slot>
+
+                <Slot>
+                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
+                        <p>model</p>
+                    </div>
+                </Slot>
+
+                <Slot>
+                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
+                        <p>model</p>
+                    </div>
+                </Slot>
+
+                <Slot>
+                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
+                        <p>model</p>
+                    </div>
+                </Slot>
+
+                <Slot>
+                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
+                        <p>model</p>
+                    </div>
+                </Slot>
+            </ModelLibrary>
 
             <div className="fixed left-0 top-0 z-[999] flex h-12 w-full items-center gap-5 bg-indigo-600 px-2 text-neutral-100">
                 <IconContext.Provider value={{ size: "20px" }}>
