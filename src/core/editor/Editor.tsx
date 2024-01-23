@@ -13,7 +13,12 @@ import {
 import { useNavigate, useParams } from "react-router-dom"
 import { Group, Vector3 } from "three"
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
-import { fetchProjects, saveCustomObjects, uploadCustomObject } from "../../api"
+import {
+    fetchProjects,
+    listCustomModels,
+    saveCustomObjects,
+    uploadCustomObject,
+} from "../../api"
 import { Button } from "../../components/button"
 import { ModelLibrary } from "../../components/composites/model-library"
 import { Modal } from "../../components/modal"
@@ -266,6 +271,16 @@ export const Editor = () => {
 
     const modelLibDisclosure = useDisclosure()
 
+    const [customModels, setCustomModels] = useLocalStorage("customModels", [
+        "",
+    ])
+
+    const handleRefreshModelList = () => {
+        listCustomModels(cookies.userUID, (files) => {
+            setCustomModels(files)
+        })
+    }
+
     return (
         <div
             className="relative h-[100vh] w-[100vw] overflow-hidden"
@@ -389,60 +404,15 @@ export const Editor = () => {
             <ModelLibrary
                 isOpen={modelLibDisclosure.isOpen}
                 onClose={modelLibDisclosure.onClose}
+                onRefresh={handleRefreshModelList}
             >
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
+                {customModels.map((model) => (
+                    <Slot key={`model-${model.split(".")[0]}`}>
+                        <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
+                            <p>{model}</p>
+                        </div>
+                    </Slot>
+                ))}
             </ModelLibrary>
 
             <div className="fixed left-0 top-0 z-[999] flex h-12 w-full items-center gap-5 bg-indigo-600 px-2 text-neutral-100">

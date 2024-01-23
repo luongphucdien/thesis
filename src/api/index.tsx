@@ -161,3 +161,13 @@ export const uploadCustomObject = async (
         })
         .catch((error) => console.log(error))
 }
+
+export const listCustomModels = async (
+    userUID: string,
+    onSuccess: (files: string[]) => void
+) => {
+    await axios
+        .get(`${API_URL}/api/user/${userUID}/models`)
+        .then((res) => onSuccess(res.data.files))
+        .catch((error) => console.log(error))
+}

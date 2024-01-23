@@ -7,7 +7,7 @@ import { FaPlus } from "react-icons/fa"
 import { TbAugmentedReality, TbMenu } from "react-icons/tb"
 import { Link, useNavigate } from "react-router-dom"
 import { slideRight } from "../../anim-variants/AnimVariants"
-import { deleteProject, fetchProjects } from "../../api"
+import { deleteProject, fetchProjects, listCustomModels } from "../../api"
 import { Button } from "../../components/button"
 import { ModelLibrary } from "../../components/composites/model-library"
 import { Modal } from "../../components/modal"
@@ -85,65 +85,30 @@ export const Dashboard = () => {
 
     const modelLibDisclosure = useDisclosure()
 
+    const [customModels, setCustomModels] = useLocalStorage("customModels", [
+        "",
+    ])
+
+    const handleRefreshModelList = () => {
+        listCustomModels(cookies.userUID, (files) => {
+            setCustomModels(files)
+        })
+    }
+
     return (
         <>
             <ModelLibrary
                 isOpen={modelLibDisclosure.isOpen}
                 onClose={modelLibDisclosure.onClose}
+                onRefresh={handleRefreshModelList}
             >
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
-
-                <Slot>
-                    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
-                        <p>model</p>
-                    </div>
-                </Slot>
+                {customModels.map((model) => (
+                    <Slot key={`model-${model.split(".")[0]}`}>
+                        <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
+                            <p>{model}</p>
+                        </div>
+                    </Slot>
+                ))}
             </ModelLibrary>
 
             <div className="flex h-full">
