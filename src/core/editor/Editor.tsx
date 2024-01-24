@@ -5,28 +5,19 @@ import { Suspense, useEffect, useRef, useState } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
 import { IoMdArrowBack } from "react-icons/io"
-import {
-    MdClose,
-    MdOutlineFileDownload,
-    MdOutlineFileUpload,
-} from "react-icons/md"
+import { MdClose, MdOutlineFileDownload } from "react-icons/md"
 import { useNavigate, useParams } from "react-router-dom"
 import { Group, Vector3 } from "three"
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
-import {
-    fetchProjects,
-    listCustomModels,
-    saveCustomObjects,
-    uploadCustomObject,
-} from "../../api"
+import { fetchProjects, listCustomModels, saveCustomObjects } from "../../api"
 import { Button } from "../../components/button"
 import { ModelLibrary } from "../../components/composites/model-library"
+import { SubPanel } from "../../components/composites/sub-panel"
 import { Modal } from "../../components/modal"
 import { Slot } from "../../components/slot"
 import { useDisclosure } from "../../util/useDisclosure"
 import { useToggle } from "../../util/useToggle"
 import { CustomObject, ProjectObjects } from "../ObjectInterface"
-import { CustomModelPreview } from "./CustomModelPreview"
 import { GroundSurface } from "./GroundSurface"
 import { SelfDefinedObject } from "./Object"
 import { Door, Window } from "./Openings"
@@ -239,36 +230,6 @@ export const Editor = () => {
         setObjList(newObjList)
     }
 
-    const importModal = useDisclosure()
-
-    const [customObj, setCustomObj] = useState<File | null>(null)
-    const modelNameRef = useRef<HTMLInputElement>(null!)
-
-    const handleImportObj = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            setCustomObj(e.target.files[0])
-        }
-    }
-
-    const resetImportObj = () => {
-        setCustomObj(null)
-    }
-
-    const uploadModel = () => {
-        if (modelNameRef.current.value === "") {
-            alert("Please provide the name of your model")
-        } else {
-            uploadCustomObject(
-                cookies.userUID,
-                customObj!,
-                modelNameRef.current.value
-            ).then(() => {
-                alert("Upload Successfully!")
-                nav(0)
-            })
-        }
-    }
-
     const modelLibDisclosure = useDisclosure()
 
     const [customModels, setCustomModels] = useLocalStorage("customModels", [
@@ -280,6 +241,12 @@ export const Editor = () => {
             setCustomModels(files)
         })
     }
+
+    const handleCustomModelOnClick = (modelName: string) => {
+        console.log(modelName)
+    }
+
+    const addCustomModelSubPanelDisc = useToggle()
 
     return (
         <div
@@ -332,82 +299,16 @@ export const Editor = () => {
                 </div>
             </Modal>
 
-            <Modal isOpen={importModal.isOpen} onClose={importModal.onClose}>
-                <div>
-                    {!customObj && (
-                        <div>
-                            <label htmlFor="obj-uploader" className="">
-                                <a className="inline-flex cursor-pointer flex-col items-center">
-                                    <IconContext.Provider
-                                        value={{ size: "48px" }}
-                                    >
-                                        <MdOutlineFileUpload />
-                                    </IconContext.Provider>
-                                    Upload your model here
-                                </a>
-                            </label>
-                            <input
-                                type="file"
-                                id="obj-uploader"
-                                className="hidden"
-                                onChange={handleImportObj}
-                                accept=".glb"
-                            />
-                        </div>
-                    )}
-
-                    {customObj && (
-                        <div className="h-[50vh] w-[50vw] overflow-hidden">
-                            <div className="flex h-full gap-8">
-                                <Canvas>
-                                    <CustomModelPreview rawFile={customObj} />
-                                    <Environment
-                                        preset="apartment"
-                                        blur={0.1}
-                                        background
-                                    />
-                                    <OrbitControls />
-                                </Canvas>
-
-                                <div className="flex flex-col justify-between whitespace-nowrap">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <label
-                                            className="text-center"
-                                            htmlFor="model-name"
-                                        >
-                                            Model Name
-                                        </label>
-                                        <input
-                                            id="model-name"
-                                            ref={modelNameRef}
-                                        />
-                                    </div>
-
-                                    <div className="flex flex-col gap-4">
-                                        <Button
-                                            variant="error"
-                                            onClick={resetImportObj}
-                                        >
-                                            Change Model
-                                        </Button>
-                                        <Button onClick={uploadModel}>
-                                            Upload
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </Modal>
-
             <ModelLibrary
                 isOpen={modelLibDisclosure.isOpen}
                 onClose={modelLibDisclosure.onClose}
                 onRefresh={handleRefreshModelList}
             >
                 {customModels.map((model) => (
-                    <Slot key={`model-${model.split(".")[0]}`}>
+                    <Slot
+                        key={`model-${model.split(".")[0]}`}
+                        onClick={() => handleCustomModelOnClick(model)}
+                    >
                         <div className="flex h-full w-full items-center justify-center rounded-2xl border border-neutral-500">
                             <p>{model}</p>
                         </div>
@@ -541,6 +442,10 @@ export const Editor = () => {
                     </div>
                 )}
 
+                <SubPanel isOpen={addCustomModelSubPanelDisc.state}>
+                    <div>Custom Model</div>
+                </SubPanel>
+
                 <div className="flex h-full flex-1 flex-col items-center gap-5 overflow-auto bg-indigo-500 p-4">
                     <div className="flex h-full w-full flex-col gap-6">
                         <div className="flex gap-2">
@@ -622,16 +527,16 @@ export const Editor = () => {
                         <div className="flex flex-1 flex-col gap-4">
                             <Button
                                 variant="non opaque"
-                                onClick={importModal.onOpen}
+                                onClick={modelLibDisclosure.onOpen}
                             >
-                                Import Custom Object
+                                Your Model Library
                             </Button>
 
                             <Button
                                 variant="non opaque"
-                                onClick={modelLibDisclosure.onOpen}
+                                onClick={addCustomModelSubPanelDisc.toggle}
                             >
-                                Your Model Library
+                                Add Local Model
                             </Button>
                         </div>
 
