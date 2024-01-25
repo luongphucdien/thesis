@@ -171,3 +171,10 @@ export const listCustomModels = async (
         .then((res) => onSuccess(res.data.files))
         .catch((error) => console.log(error))
 }
+
+export const fetchCustomModel = async (userUID: string, modelName: string) => {
+    await axios
+        .get(`${API_URL}/api/user/${userUID}/model/${modelName}`)
+        .then((res) => window.location.assign(res.data.downloadURL))
+        .catch((error) => console.log(error))
+}

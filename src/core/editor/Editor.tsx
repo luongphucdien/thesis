@@ -9,7 +9,13 @@ import { MdClose, MdOutlineFileDownload } from "react-icons/md"
 import { useNavigate, useParams } from "react-router-dom"
 import { Group, Vector3 } from "three"
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js"
-import { fetchProjects, listCustomModels, saveCustomObjects } from "../../api"
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
+import {
+    fetchCustomModel,
+    fetchProjects,
+    listCustomModels,
+    saveCustomObjects,
+} from "../../api"
 import { Button } from "../../components/button"
 import { ModelLibrary } from "../../components/composites/model-library"
 import { SubPanel } from "../../components/composites/sub-panel"
@@ -243,10 +249,26 @@ export const Editor = () => {
     }
 
     const handleCustomModelOnClick = (modelName: string) => {
-        console.log(modelName)
+        fetchCustomModel(cookies.userUID, modelName)
     }
 
     const addCustomModelSubPanelDisc = useToggle()
+
+    // const [rawFile, setRawFile] = useState<File | null>(null)
+    const [model, setModel] = useState<Group>(null!)
+
+    const localModelInputRef = useRef<HTMLInputElement>(null!)
+    const handleAddLocalModel = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const rawFile = e.target.files ? e.target.files[0] : null
+        const reader = new FileReader()
+        reader.addEventListener("load", (e) => {
+            const content = e.target?.result
+
+            const loader = new GLTFLoader()
+            loader.parse(content!, "", (gltf) => setModel(gltf.scene))
+        })
+        reader.readAsArrayBuffer(rawFile!)
+    }
 
     return (
         <div
@@ -534,10 +556,20 @@ export const Editor = () => {
 
                             <Button
                                 variant="non opaque"
-                                onClick={addCustomModelSubPanelDisc.toggle}
+                                onClick={() =>
+                                    localModelInputRef.current.click()
+                                }
                             >
                                 Add Local Model
                             </Button>
+
+                            <input
+                                type="file"
+                                ref={localModelInputRef}
+                                className="hidden"
+                                onChange={handleAddLocalModel}
+                                accept=".glb"
+                            />
                         </div>
 
                         <div className="flex flex-col gap-4">
@@ -642,6 +674,8 @@ export const Editor = () => {
                             />
                         </group>
                     )}
+
+                    {model && <primitive object={model} />}
 
                     <OrbitControls />
 
