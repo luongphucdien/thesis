@@ -3,6 +3,7 @@ import { ThreeEvent, useThree } from "@react-three/fiber"
 import { useRef } from "react"
 import {
     Color,
+    Group,
     Mesh,
     MeshStandardMaterial,
     Raycaster,
@@ -28,8 +29,16 @@ export const GroundSurface = (props: {
         rotation: number
     }
     onClick: (objPos: Vector3, angle: number) => void
+    customModel?: Group
 }) => {
-    const { roomPositions, containerRef, groundY, object, onClick } = props
+    const {
+        roomPositions,
+        containerRef,
+        groundY,
+        object,
+        onClick,
+        customModel,
+    } = props
     const roots = {
         A: {
             x: roomPositions[0],
@@ -149,20 +158,30 @@ export const GroundSurface = (props: {
                 </mesh>
             </group>
 
-            <mesh
-                ref={highlighter}
-                rotation={[0, angle + object.rotation, 0]}
-                name={object.name}
-            >
-                <boxGeometry
-                    args={[object.width, object.height, object.depth]}
-                />
-                <meshStandardMaterial
-                    color={color.VALID}
-                    transparent
-                    opacity={0.4}
-                />
-            </mesh>
+            {customModel ? (
+                <mesh
+                    ref={highlighter}
+                    rotation={[0, angle, 0]}
+                    name={object.name}
+                >
+                    <primitive object={customModel} />
+                </mesh>
+            ) : (
+                <mesh
+                    ref={highlighter}
+                    rotation={[0, angle + object.rotation, 0]}
+                    name={object.name}
+                >
+                    <boxGeometry
+                        args={[object.width, object.height, object.depth]}
+                    />
+                    <meshStandardMaterial
+                        color={color.VALID}
+                        transparent
+                        opacity={0.4}
+                    />
+                </mesh>
+            )}
         </>
     )
 }

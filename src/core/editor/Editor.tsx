@@ -97,7 +97,7 @@ export const Editor = () => {
     const objectHeight = useRef<HTMLInputElement>(null!)
     const objectDepth = useRef<HTMLInputElement>(null!)
     const objectName = useRef<HTMLInputElement>(null!)
-    const [objectRotation, setObjectRotation] = useState("")
+    const [objectRotation, setObjectRotation] = useState("0")
 
     const [objectBound, setObjectBound] = useState<{
         width: number
@@ -252,10 +252,15 @@ export const Editor = () => {
         fetchCustomModel(cookies.userUID, modelName)
     }
 
-    const addCustomModelSubPanelDisc = useToggle()
+    const addCustomModelSubPanelDisc = useDisclosure()
 
-    // const [rawFile, setRawFile] = useState<File | null>(null)
-    const [model, setModel] = useState<Group>(null!)
+    const [model, setModel] = useState<{
+        name: string
+        mesh: Group | undefined
+    }>({
+        mesh: undefined,
+        name: "",
+    })
 
     const localModelInputRef = useRef<HTMLInputElement>(null!)
     const handleAddLocalModel = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,9 +270,47 @@ export const Editor = () => {
             const content = e.target?.result
 
             const loader = new GLTFLoader()
-            loader.parse(content!, "", (gltf) => setModel(gltf.scene))
+            loader.parse(content!, "", (gltf) =>
+                setModel({
+                    name: rawFile ? rawFile.name : "",
+                    mesh: gltf.scene,
+                })
+            )
         })
         reader.readAsArrayBuffer(rawFile!)
+
+        e.target.files && addCustomModelSubPanelDisc.onOpen()
+    }
+
+    const handleResetCustomModel = () => {
+        addCustomModelSubPanelDisc.onClose()
+        setModel({
+            name: "",
+            mesh: undefined,
+        })
+    }
+
+    const [customObjectsList, setCustomObjectsList] = useState<
+        { name: string; mesh: Group; position: Vector3 }[]
+    >([])
+
+    const [tempPos, setTempPos] = useState<Vector3>()
+
+    const placeCustomModelDisclosure = useDisclosure()
+
+    const handleGroundClickCustomModel = (pos: Vector3) => {
+        placeCustomModelDisclosure.onOpen()
+        setTempPos(pos)
+    }
+
+    const handlePlaceCustomModel = () => {
+        console.log(model.mesh)
+        setCustomObjectsList([
+            ...customObjectsList,
+            { name: model.name, mesh: model.mesh!, position: tempPos! },
+        ])
+        placeCustomModelDisclosure.onClose()
+        handleResetCustomModel()
     }
 
     return (
@@ -318,6 +361,24 @@ export const Editor = () => {
                         </span>
                         Download as GLTF
                     </a>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={placeCustomModelDisclosure.isOpen}
+                onClose={placeCustomModelDisclosure.onClose}
+            >
+                <p>Place {model.name} here?</p>
+
+                <div className="flex gap-4">
+                    <Button
+                        variant="error"
+                        onClick={placeCustomModelDisclosure.onClose}
+                    >
+                        No
+                    </Button>
+
+                    <Button onClick={handlePlaceCustomModel}>Yes</Button>
                 </div>
             </Modal>
 
@@ -464,8 +525,21 @@ export const Editor = () => {
                     </div>
                 )}
 
-                <SubPanel isOpen={addCustomModelSubPanelDisc.state}>
-                    <div>Custom Model</div>
+                <SubPanel isOpen={addCustomModelSubPanelDisc.isOpen}>
+                    <div className="flex flex-col gap-4">
+                        <div>
+                            <p>Model: {model.name}</p>
+                        </div>
+
+                        <div>
+                            <Button
+                                variant="error"
+                                onClick={handleResetCustomModel}
+                            >
+                                Reset
+                            </Button>
+                        </div>
+                    </div>
                 </SubPanel>
 
                 <div className="flex h-full flex-1 flex-col items-center gap-5 overflow-auto bg-indigo-500 p-4">
@@ -656,6 +730,19 @@ export const Editor = () => {
                     </group>
 
                     <group>
+                        {customObjectsList !== undefined &&
+                            customObjectsList.map((cObj, idx) => (
+                                <mesh
+                                    key={`${cObj.name}-${idx}`}
+                                    name={cObj.name}
+                                    position={cObj.position}
+                                >
+                                    <primitive object={cObj.mesh} />
+                                </mesh>
+                            ))}
+                    </group>
+
+                    <group>
                         <Scales
                             groundY={1}
                             positions={roomPositions}
@@ -675,7 +762,24 @@ export const Editor = () => {
                         </group>
                     )}
 
-                    {model && <primitive object={model} />}
+                    {/* {model.mesh && <primitive object={model.mesh} />} */}
+
+                    {model.mesh && (
+                        <GroundSurface
+                            roomPositions={roomPositions}
+                            containerRef={containerRef}
+                            groundY={1}
+                            object={{
+                                depth: 0,
+                                height: 0,
+                                width: 0,
+                                rotation: 0,
+                                name: model.name,
+                            }}
+                            onClick={handleGroundClickCustomModel}
+                            customModel={model.mesh}
+                        />
+                    )}
 
                     <OrbitControls />
 
