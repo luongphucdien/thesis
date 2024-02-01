@@ -161,7 +161,7 @@ export const GroundSurface = (props: {
             {customModel ? (
                 <mesh
                     ref={highlighter}
-                    rotation={[0, angle, 0]}
+                    rotation={[0, angle + object.rotation, 0]}
                     name={object.name}
                 >
                     <primitive object={customModel} />

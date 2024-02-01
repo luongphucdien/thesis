@@ -178,3 +178,16 @@ export const fetchCustomModel = async (userUID: string, modelName: string) => {
         .then((res) => window.location.assign(res.data.downloadURL))
         .catch((error) => console.log(error))
 }
+
+export const saveCustomModels = async (
+    userUID: string,
+    projName: string,
+    models: object
+) => {
+    await axios
+        .post(
+            `${API_URL}/api/user/${userUID}/project/${projName}/models`,
+            models
+        )
+        .catch((error) => console.log(error))
+}
