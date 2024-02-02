@@ -29,7 +29,8 @@ export const checkIfEmailExisted = async (
 }
 
 export const signUp = async (
-    signUpInfo: {email: string, password: string},
+    signUpInfo: { email: string; password: string },
+
     setSignUpState: (state: boolean) => void,
     onSuccessCallback: () => void,
     onErrorCallback: (errorCode: string) => void
@@ -61,7 +62,8 @@ export const signUp = async (
 }
 
 export const signIn = async (
-    signInInfo: {email: string, password: string},
+    signInInfo: { email: string; password: string },
+
     onSuccessCallback: (token: string, userUID: string) => void,
     onErrorCallback: (errorCode: string) => void
 ) => {
@@ -146,5 +148,48 @@ export const saveCustomObjects = async (
 ) => {
     await axios
         .post(`${API_URL}/api/user/${userUID}/project/${name}/objects`, objects)
+        .catch((error) => console.log(error))
+}
+
+export const uploadCustomObject = async (
+    userUID: string,
+    model: File,
+    modelName: string
+) => {
+    await axios
+        .post(`${API_URL}/api/user/${userUID}/models`, {
+            model: model,
+            modelName: modelName,
+        })
+        .catch((error) => console.log(error))
+}
+
+export const listCustomModels = async (
+    userUID: string,
+    onSuccess: (files: string[]) => void
+) => {
+    await axios
+        .get(`${API_URL}/api/user/${userUID}/models`)
+        .then((res) => onSuccess(res.data.files))
+        .catch((error) => console.log(error))
+}
+
+export const fetchCustomModel = async (userUID: string, modelName: string) => {
+    await axios
+        .get(`${API_URL}/api/user/${userUID}/model/${modelName}`)
+        .then((res) => window.location.assign(res.data.downloadURL))
+        .catch((error) => console.log(error))
+}
+
+export const saveCustomModels = async (
+    userUID: string,
+    projName: string,
+    models: object
+) => {
+    await axios
+        .post(
+            `${API_URL}/api/user/${userUID}/project/${projName}/models`,
+            models
+        )
         .catch((error) => console.log(error))
 }

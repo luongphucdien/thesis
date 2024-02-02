@@ -39,6 +39,7 @@ export interface CustomObject {
     position: Vector3
     angle: number
     color: string
+    rotation: number
 }
 interface RoomObject {
     roomRoots: number[]

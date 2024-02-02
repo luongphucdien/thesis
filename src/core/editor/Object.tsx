@@ -9,10 +9,19 @@ interface ObjectInterface {
     name: string
     color: string
     onClick: (obj: CustomObject) => void
+    rotation: number
 }
 
 export const SelfDefinedObject = (props: ObjectInterface) => {
-    const { angle, name, position, dimension, color, onClick } = props
+    const {
+        angle,
+        name,
+        position,
+        dimension,
+        color,
+        onClick,
+        rotation = 0,
+    } = props
 
     const thisMeshRef = useRef<Mesh>(null!)
 
@@ -31,7 +40,7 @@ export const SelfDefinedObject = (props: ObjectInterface) => {
             <mesh
                 name={name}
                 position={position}
-                rotation={[0, angle, 0]}
+                rotation={[0, angle + rotation, 0]}
                 ref={thisMeshRef}
                 onPointerEnter={handlePointerIn}
                 onPointerOut={handlePointerOut}
@@ -42,6 +51,7 @@ export const SelfDefinedObject = (props: ObjectInterface) => {
                         dimension: dimension,
                         name: name,
                         position: position,
+                        rotation: rotation,
                     })
                     e.stopPropagation()
                 }}
