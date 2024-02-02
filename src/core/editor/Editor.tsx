@@ -1,6 +1,7 @@
 import { Environment, OrbitControls } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import { useLocalStorage } from "@uidotdev/usehooks"
+
 import { Suspense, useEffect, useRef, useState } from "react"
 import { useCookies } from "react-cookie"
 import { IconContext } from "react-icons"
@@ -98,6 +99,7 @@ export const Editor = () => {
     const objectHeight = useRef<HTMLInputElement>(null!)
     const objectDepth = useRef<HTMLInputElement>(null!)
     const objectName = useRef<HTMLInputElement>(null!)
+
     const [objectRotation, setObjectRotation] = useState("0")
 
     const [objectBound, setObjectBound] = useState<{

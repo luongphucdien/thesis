@@ -30,6 +30,7 @@ export const checkIfEmailExisted = async (
 
 export const signUp = async (
     signUpInfo: { email: string; password: string },
+
     setSignUpState: (state: boolean) => void,
     onSuccessCallback: () => void,
     onErrorCallback: (errorCode: string) => void
@@ -62,6 +63,7 @@ export const signUp = async (
 
 export const signIn = async (
     signInInfo: { email: string; password: string },
+
     onSuccessCallback: (token: string, userUID: string) => void,
     onErrorCallback: (errorCode: string) => void
 ) => {

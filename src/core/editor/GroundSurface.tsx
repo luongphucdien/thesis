@@ -39,6 +39,7 @@ export const GroundSurface = (props: {
         onClick,
         customModel,
     } = props
+    
     const roots = {
         A: {
             x: roomPositions[0],
