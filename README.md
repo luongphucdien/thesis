@@ -1,27 +1,39 @@
-# React + TypeScript + Vite
+# WEB-BASED FLOOR PLANNING APPLICATION WITH AR TECHNOLOGIES USING WEBXR AND REACTJS (FRONTEND)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<div align="center">
+    <p>Scan the QR code to try it out!</p>
+    <a href="https://thesis-ruby.vercel.app/">
+        <img src="./public/qr.png" style="height:150;border-radius:24px" alt="https://thesis-ruby.vercel.app/" title="https://thesis-ruby.vercel.app/"/>
+    </a>
+</div>
 
-Currently, two official plugins are available:
+## Preambles
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**For iOS and iPadOS users:** The project AR mode is currently unable to work due to no support for WebXR Device API from Apple.
 
-## Expanding the ESLint configuration
+**For Android users:** Work as intended.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Instructions for installation
 
-- Configure the top-level `parserOptions` property like this:
+### Prerequisite
+- Node >= v21.5.0
+- Yarn >= v1.22.21
+- Running [backend](https://github.com/luongphucdien/thesis-api)
 
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
-```
+**How to install:**
+> - **Node (Preferably through nvm):** https://github.com/coreybutler/nvm-windows
+> - **Yarn package manager:** https://yarnpkg.com/getting-started/install
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+### Installation
+
+1. [Fork the repository!](https://github.com/luongphucdien/thesis/fork)
+2. Clone the fork: `git clone https://github.com/your-username/thesis.git`
+3. Open terminal at the root of the repository.
+4. Run `yarn` or `yarn install` to install all packages.
+5. Add `.env` file and add neccessary variables.
+5. Run `yarn start` to start the application.
+6. Go to the the URL provided by Vite in the terminal.
+
+***Notes:*** *Your browser will try to warn about a potential security risk. This is due to WebXR API requires HTTPS to run, and the certificate for development is a dummy one.*
+
+***Fix:*** *Accept and continue as normal.*
